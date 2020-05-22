@@ -45,6 +45,9 @@ class ExecuteCommandElement( ScreenElement ):
                self.start()
             else:
                self.stop()
+         else:
+            self.start()
+      
       if button == self.stopButton:
          self.stop()
       super().onButtonDown( button )
