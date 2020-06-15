@@ -14,7 +14,7 @@ class MainMenu( ScreenElement, Log ):
       Log.__init__( self, "MainMenu", "buttonNext: {bn} buttonPrev: {bp}".format( bn=buttonNext, bp=buttonPrev ) )
       self._titleElement = ScreenElement( isEndingLine=True )
       self._activeElementWrapper = ScreenElement( isEndingLine=True )
-      super().addChildren( [ self._titleElement, self._activeElementWrapper ] )
+      self.addChildren( [ self._titleElement, self._activeElementWrapper ] )
       
       self._activeElementIndex = 0
       

@@ -4,7 +4,7 @@ from time import localtime, strftime
 
 class CurrentTimeElement(ScreenElement):
    def __init__( self, dateFormatString ):
-      super().__init__()
+      ScreenElement.__init__( self )
       self.text = "time"
       self.color = Color.BLACKWHITE 
       self.dateFormatString = dateFormatString

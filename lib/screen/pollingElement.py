@@ -17,8 +17,8 @@ class PollingElement( ScreenElement, Log ):
                                           interval=interval,
                                           timeout=timeout )
    def run( self ):
-      super().run()
       self.dataProcHandler.run()
+      super().run()
    
    def _procResult( self, stdout, stderr ):
       #try:
