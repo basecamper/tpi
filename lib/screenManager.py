@@ -74,7 +74,11 @@ class ScreenManager( Log ):
          win.clear()
       
       self.log("printing elements")
-      self.recursivePrintElements( screen, 0, 0, win )
+      try:
+         self.recursivePrintElements( screen, 0, 0, win )
+      except Exception as e:
+         # screen might be full
+         self.logError("Exception caught '{ex}'".format( ex=e ))
       
       if win:
          self.log("refreshing curses window")
