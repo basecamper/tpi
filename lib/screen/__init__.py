@@ -1,6 +1,7 @@
 from enum import Enum
-from lib.screen.screenColor import Color
+
 from lib.log import Log
+from lib.screen.screenColor import Color
 
 class InteractiveElement( Log ):
    def __init__( self,

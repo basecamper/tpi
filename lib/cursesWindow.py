@@ -1,6 +1,7 @@
 import curses
-from lib.screen.screenColor import Color
 from time import sleep
+
+from lib.screen.screenColor import Color
 class CursesWindow:
    def __init__( self ):
       self.stdscr = curses.initscr()

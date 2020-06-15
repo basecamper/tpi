@@ -4,7 +4,9 @@ from lib.screen import ScreenElement
 from lib.screen.passwordManagerElement import PasswordManagerElement
 
 class MainMenu( ScreenElement, Log ):
+   
    menuItems = [ PasswordManagerElement() ]
+   
    def __init__( self,
                  buttonNext = None,
                  buttonPrev = None ):

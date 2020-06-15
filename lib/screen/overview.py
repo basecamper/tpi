@@ -1,3 +1,5 @@
+from enum import Enum
+
 from lib import osCommand
 from lib import osPollCommand
 from lib.glob import GlobalRuntime
@@ -10,10 +12,6 @@ from lib.screen.pollingElement import PollingElement
 from lib.screen.executeCommandElement import ExecuteCommandElement
 from lib.screen.mainMenu import MainMenu
 from lib.screen.screenColor import Color
-from enum import Enum
-
-
-   
 
 class Overview( ScreenElement, Log ):
 

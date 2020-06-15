@@ -1,6 +1,7 @@
 EMPTY_STRING = ""
 
 class BitState():
+   
    @staticmethod
    def hasBit( binValue, binCompare ):
       return binValue & binCompare != 0
@@ -18,6 +19,7 @@ class BitState():
       return binValue ^ binCompare
 
 class HasStep( object ):
+   
    def __init__( self, startStep : int = 0 ):
       object.__init__( self )
       self._startStep = startStep
@@ -37,6 +39,7 @@ class HasStep( object ):
 
 
 class HasState( object ):
+   
    def __init__( self ):
       object.__init__( self )
       self._bitState = 0

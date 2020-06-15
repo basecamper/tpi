@@ -1,7 +1,8 @@
-from typing import Callable
 import threading
+from typing import Callable
 from subprocess import Popen, PIPE
 from datetime import datetime
+
 from lib.log import Log
 
 class ProcHandler( Log ):

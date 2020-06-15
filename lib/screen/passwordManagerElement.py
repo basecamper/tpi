@@ -10,6 +10,7 @@ from lib.screen.screenColor import Color
 from lib.screen.passwordEditElement import PasswordEditElement
 
 class PasswordManagerElement( ScreenElement, HasState, HasStep, Log ):
+   
    STEP_START_REQUIRED = 0
    STEP_STARTED = 1
    STEP_GET_PASSWORD = 2
@@ -17,9 +18,8 @@ class PasswordManagerElement( ScreenElement, HasState, HasStep, Log ):
    STEP_SHOW_CATEGORIES = 4
    STEP_CLEANUP = 5
    
-   STATE_STARTED =    0b10
-   PASSWORDS_LOADED = 0b01
-   
+   STATE_STARTED =          0b10
+   STATE_PASSWORDS_LOADED = 0b01
    
    def __init__( self ):
       ScreenElement.__init__( self,
@@ -54,8 +54,8 @@ class PasswordManagerElement( ScreenElement, HasState, HasStep, Log ):
       if self.hasStep( PasswordManagerElement.STEP_STARTED ):
          self.log( "STEP_STARTED" )
          
-         if self.hasState( PasswordManagerElement.PASSWORDS_LOADED ):
-            self.log( "PASSWORDS_LOADED" )
+         if self.hasState( PasswordManagerElement.STATE_PASSWORDS_LOADED ):
+            self.log( "STATE_PASSWORDS_LOADED" )
             self.setStep( PasswordManagerElement.STEP_SHOW_CATEGORIES )
          
          else:

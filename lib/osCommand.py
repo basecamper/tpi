@@ -1,6 +1,7 @@
-from lib.screen.screenColor import Color
-from lib.log import Log
 import re as re
+
+from lib.log import Log
+from lib.screen.screenColor import Color
 
 def getColorInRange( value : float, firstRangeTop : float, secondRangeTop : float ):
    if value < firstRangeTop:

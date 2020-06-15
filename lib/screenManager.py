@@ -1,14 +1,14 @@
-from lib.screen.screenColor import Color
 from lib.glob import Global, GlobalRuntime
 from lib.log import Log
 from lib.cursesWindow import CursesWindow
 from lib.screen.overview import Overview
-
+from lib.screen.screenColor import Color
 
 
 class ScreenManager( Log ):
+   
    def __init__( self ):
-      Log.__init__( self, "ScreenManager" )
+      Log.__init__( self, className="ScreenManager" )
       self.cursesWindow = CursesWindow() if not Global.DEBUG else None
       self.screen = Overview()
       self.isRefreshing = False

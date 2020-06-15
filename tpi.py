@@ -1,8 +1,9 @@
 import time
+import sys
+
 from lib.button import ButtonHandler
 from lib.screenManager import ScreenManager
 from lib.glob import Global, GlobalRuntime
-import sys
 
 class Control:
    
@@ -37,9 +38,9 @@ if __name__ == "__main__":
       Global.DEBUG = True
    
    try:
-      print("start.")
       c = Control()
       c.run()
+   
    except KeyboardInterrupt as e:
-      print("quit")
       del(c)
+      sys.stderr.write("KeyboardInterrupt\n")

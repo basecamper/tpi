@@ -1,6 +1,7 @@
-from lib.screen.screenColor import Color
-from lib.log import Log
 import re as re
+
+from lib.log import Log
+from lib.screen.screenColor import Color
 
 def getColorInRange( value : float, firstRangeTop : float, secondRangeTop : float ):
    if value < firstRangeTop:
@@ -16,6 +17,7 @@ def matchColorFunction( text : str, valueColorMap : dict = {} ):
          return v
 
 class OSPollCommand:
+   
    @staticmethod
    def getCommand():
       return [ "echo", "-" ]
@@ -29,9 +31,11 @@ class OSPollCommand:
       return '-', Color.DEFAULT
 
 class GetGPUTempCommand( OSPollCommand ):
+   
    @staticmethod
    def getCommand():
       return ['/opt/vc/bin/vcgencmd', 'measure_temp']
+   
    @staticmethod
    def parseFunction( stdout, stderr ):
       t = stdout.decode('utf-8')
@@ -40,9 +44,11 @@ class GetGPUTempCommand( OSPollCommand ):
       return "{t}°C".format( t=t ), getColorInRange( float( t ), 55, 65 )
 
 class GetCPUTempCommand(OSPollCommand):
+   
    @staticmethod
    def getCommand():
       return ['cat','/sys/class/thermal/thermal_zone0/temp']
+   
    @staticmethod
    def parseFunction( stdout, stderr ):
       t = stdout.decode('utf-8')
@@ -51,9 +57,11 @@ class GetCPUTempCommand(OSPollCommand):
       return "{t}°C".format( t=t ), getColorInRange( float( t ), 55, 65 )
 
 class GetGPUMemUsageCommand(OSPollCommand):
+   
    @staticmethod
    def getCommand():
       return ['vcdbg','reloc']
+   
    @staticmethod
    def parseFunction( stdout, stderr ):
       t = stdout.decode('utf-8')

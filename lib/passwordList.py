@@ -6,9 +6,9 @@ from lib.screen import ScreenElement
 
 class PasswordList( HasState, HasStep, Log ):
 
-   BUSY  =                    0b100
-   MOUNTED =                  0b010
-   CRYPT_OPENED =             0b001
+   STATE_BUSY  =                    0b100
+   STATE_MOUNTED =                  0b010
+   STATE_CRYPT_OPENED =             0b001
    
    STEP_INIT = 0
    STEP_IDLE = 1
@@ -61,67 +61,67 @@ class PasswordList( HasState, HasStep, Log ):
    
    def run( self ):
       self.logStart( "run","step {s}".format( s=self.getStep() ) )
-      if not self.hasState( PasswordList.BUSY ):
+      if not self.hasState( PasswordList.STATE_BUSY ):
          
-         # init
+         # step init
          if self.hasStep( PasswordList.STEP_INIT ):
             # do stuff
             self.setStep( PasswordList.STEP_IDLE )
          
-         # idle
+         # step idle
          if self.hasStep( PasswordList.STEP_IDLE ): return
          
-         # load
+         # step load
          if self.hasStep( PasswordList.STEP_LOAD_PASSWORDS ):
             
-            if not self.hasState( PasswordList.CRYPT_OPENED ):
+            if not self.hasState( PasswordList.STATE_CRYPT_OPENED ):
                self._executeProc( self.cryptOpenProc.run )
             
-            elif not self.hasState( PasswordList.MOUNTED ):
+            elif not self.hasState( PasswordList.STATE_MOUNTED ):
                self._executeProc( self.mountCryptDirProc.run )
             
             else:
                self._loadFromFile()
                self.setStep( PasswordList.STEP_POST_LOADING )
          
-         # post load
+         # step post load
          if hasStep( PasswordList.STEP_POST_LOADING ):
             
-            if self.hasState( PasswordList.MOUNTED ):
+            if self.hasState( PasswordList.STATE_MOUNTED ):
                self._executeProc( self.unmountCryptDirProc.run )
             
-            elif self.hasState( PasswordList.CRYPT_OPENED ):
+            elif self.hasState( PasswordList.STATE_CRYPT_OPENED ):
                self._executeProc( self.cryptCloseProc.run )
             
             else:
                self.setStep( PasswordList.STEP_CLEANUP )
          
-         # save
+         # step save
          if self.hasStep( PasswordList.STEP_SAVE_PASSWORDS ):
             
-            if not self.hasState( PasswordList.CRYPT_OPENED ):
+            if not self.hasState( PasswordList.STATE_CRYPT_OPENED ):
                self._executeProc( self.cryptOpenProc.run )
             
-            elif not self.hasState( PasswordList.MOUNTED ):
+            elif not self.hasState( PasswordList.STATE_MOUNTED ):
                self._executeProc( self.mountCryptDirProc.run )
             
             else:
                self._saveToFile()
                self.setStep( PasswordList.STEP_POST_SAVING )
          
-         # post save
+         # step post save
          if hasStep( PasswordList.STEP_POST_SAVING ):
             
-            if self.hasState( PasswordList.MOUNTED ):
+            if self.hasState( PasswordList.STATE_MOUNTED ):
                self._executeProc( self.unmountCryptDirProc.run )
             
-            elif self.hasState( PasswordList.CRYPT_OPENED ):
+            elif self.hasState( PasswordList.STATE_CRYPT_OPENED ):
                self._executeProc( self.cryptCloseProc.run )
             
             else:
                self.setStep( PasswordList.STEP_CLEANUP )
          
-         # cleanup
+         # step cleanup
          if hasStep( PasswordList.STEP_CLEANUP ):
             self._state = 0
             self.setStep( PasswordList.STEP_INIT )
@@ -136,58 +136,58 @@ class PasswordList( HasState, HasStep, Log ):
    
    def _preProc( self, func ):
       self.logStart( "_preProc" )
-      self.setState( PasswordList.BUSY )
+      self.setState( PasswordList.STATE_BUSY )
       self.logEnd()
    
    def _postProc( self, process ):
       self.logStart( "_postProc" )
-      self.delState( PasswordList.BUSY )
+      self.delState( PasswordList.STATE_BUSY )
       self.logEnd()
    
    def _procMountStatus( self, process ): # TODO unused, implement during init
       self.logStart( "_procMountStatus" )
       self._preProc( process )
       if process.returnvalue == 0:
-         self.setState( PasswordList.MOUNTED )
+         self.setState( PasswordList.STATE_MOUNTED )
       else:
-         self.delState( PasswordList.MOUNTED )
+         self.delState( PasswordList.STATE_MOUNTED )
       self._postProc( process )
       self.logEnd()
    
    def _procCryptDeviceStatus( self, process ): # TODO unused, implement during init
       self.logStart( "_procCryptDeviceStatus" )
       if process.returnvalue == 0:
-         self.setState( PasswordList.CRYPT_OPENED )
+         self.setState( PasswordList.STATE_CRYPT_OPENED )
       else:
-         self.delState( PasswordList.CRYPT_OPENED )
+         self.delState( PasswordList.STATE_CRYPT_OPENED )
       self._postProc( process )
       self.logEnd()
    
    def _procCryptOpen( self, process ):
       self.logStart( "_procCryptOpen" )
       if process.returnvalue == 0:
-         self.setState( PasswordList.CRYPT_OPENED )
+         self.setState( PasswordList.STATE_CRYPT_OPENED )
       self._postProc( process )
       self.logEnd()
    
    def _procCryptClose( self, process ):
       self.logStart( "_procCryptClose" )
       if process.returnvalue == 0:
-         self.delState( PasswordList.CRYPT_OPENED )
+         self.delState( PasswordList.STATE_CRYPT_OPENED )
       self._postProc( process )
       self.logEnd()
    
    def _procMount( self, process ):
       self.logStart( "_procMount" )
       if process.returnvalue == 0:
-         self.setState( PasswordList.MOUNTED )
+         self.setState( PasswordList.STATE_MOUNTED )
       self._postProc( process )
       self.logEnd()
    
    def _procUmount( self, process ):
       self.logStart( "_procUmount" )
       if process.returnvalue == 0:
-         self.delState( PasswordList.MOUNTED )
+         self.delState( PasswordList.STATE_MOUNTED )
       self._postProc( process )
       self.logEnd()
    

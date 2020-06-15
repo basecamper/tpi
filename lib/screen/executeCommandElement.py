@@ -1,9 +1,10 @@
+from lib.procHandler import ProcHandler
 from lib.screen import ScreenElement
 from lib.screen.pollingElement import PollingElement
-from lib.procHandler import ProcHandler
 from lib.screen.screenColor import Color
 
 class ExecuteCommandElement( ScreenElement ):
+   
    def __init__( self,
                  text : str,
                  startButton : object,
@@ -11,6 +12,7 @@ class ExecuteCommandElement( ScreenElement ):
                  stopButton : object = None,
                  interval=10,
                  timeout=3 ):
+      
       ScreenElement.__init__( self )
       self.startButton = startButton
       self.stopButton = stopButton

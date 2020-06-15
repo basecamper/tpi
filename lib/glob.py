@@ -1,4 +1,5 @@
 from enum import Enum
+
 class Global:
    DEBUG = False # disable curses screen / show Log.debug messages
    MAIN_RUN_SECONDS = 60 # run() interval

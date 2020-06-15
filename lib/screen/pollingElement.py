@@ -1,11 +1,13 @@
 from typing import Callable
 from datetime import datetime
+
+from lib.log import Log
 from lib.procHandler import ProcHandler
 from lib.screen import ScreenElement
-from lib.log import Log
 
 
 class PollingElement( ScreenElement, Log ):
+   
    def __init__( self, osCommand = None, interval : int = 5, timeout : int = 3 ):
       ScreenElement.__init__( self )
       Log.__init__( self, className="PollingElement" )
@@ -16,6 +18,7 @@ class PollingElement( ScreenElement, Log ):
                                           callback=self._procResult,
                                           interval=interval,
                                           timeout=timeout )
+   
    def run( self ):
       self.dataProcHandler.run()
       super().run()

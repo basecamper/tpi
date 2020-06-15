@@ -1,7 +1,9 @@
-from lib.glob import Global
-from lib.tools import EMPTY_STRING
 import time
 import sys
+
+from lib.glob import Global
+from lib.tools import EMPTY_STRING
+
 class Log( object ):
    _statusLines = []
    _popStatusTimestamp = None

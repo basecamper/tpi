@@ -1,6 +1,7 @@
+from time import localtime, strftime
+
 from lib.screen import ScreenElement
 from lib.screen.screenColor import Color
-from time import localtime, strftime
 
 class CurrentTimeElement(ScreenElement):
    def __init__( self, dateFormatString ):
