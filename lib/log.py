@@ -58,8 +58,6 @@ class Log( object ):
    def debug( className : str = None, method : str = None, message : str = None ):
       if message:
          if Global.DEBUG:
-            print( message )
-         else:
             sys.stderr.write( "{m} \n".format( m=message ) )
    
    @staticmethod

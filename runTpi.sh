@@ -9,10 +9,7 @@ COMMAND="python3 ./tpi.py"
 
 case "$1" in
 	"-d"|"d"|"debug")
-		eval  "$COMMAND debug"
-		;;
-	*)
-		eval  "$COMMAND" >/dev/tty1 >&1
+		eval  "$COMMAND debug" 2>&1
 		;;
 esac
 
