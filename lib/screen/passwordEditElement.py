@@ -58,14 +58,14 @@ class PasswordEditElement( ScreenElement, HasState, HasStep, Log ):
       
       if self.hasStep( PasswordEditElement.STEP_CLEANUP ):
          self.log( "executing STEP_CLEANUP" )
-         self.setExclusivePropagation( False )
-         self._pwTextCurrentCharIndex == 0
+         self._pwTextCurrentCharIndex = 0
          self._pwTextPreElement.text = EMPTY_STRING
          self._pwTextCharElement.text = EMPTY_STRING
          self._pwTextPostElement.text = EMPTY_STRING
          self._pwText = EMPTY_STRING
          
          self.setStep( PasswordEditElement.STEP_IDLE )
+         self.setExclusivePropagation( False )
       
       self.logEnd()
    
@@ -75,6 +75,11 @@ class PasswordEditElement( ScreenElement, HasState, HasStep, Log ):
       slen = len( self._pwText )
       preLen = self._pwTextCurrentCharIndex
       postLen = slen - self._pwTextCurrentCharIndex - 1
+      
+      self.log("strLen: {slen} charIdx: {idx} preLen: {pre} postLen: {post}".format( slen=slen,
+                                                                                     idx=self._pwTextCurrentCharIndex,
+                                                                                     pre=preLen,
+                                                                                     post=postLen ))
       
       if preLen >= 0:
          if self._hideUnselectedChars:
