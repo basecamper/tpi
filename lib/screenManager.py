@@ -1,5 +1,6 @@
 from lib.glob import Global, GlobalRuntime
 from lib.log import Log
+from lib.tools import getMsTimestamp
 from lib.cursesWindow import CursesWindow
 from lib.screen.overview import Overview
 from lib.screen.screenColor import Color
@@ -12,6 +13,9 @@ class ScreenManager( Log ):
       self.cursesWindow = CursesWindow() if not Global.DEBUG else None
       self.screen = Overview()
       self.isRefreshing = False
+      self._lastRunTimestamp = None
+      self._maxRunInterval = Global.MAIN_RUN_SECONDS
+      self._setTimestamp()
    
    def __del__( self ):
       del( self.cursesWindow )
@@ -21,9 +25,21 @@ class ScreenManager( Log ):
    def onButtonDown( self, button ):
       if not self.screen.propagateExclusiveButtonDown( button ):
          self.screen.onButtonDown( button )
-      self.run() # be very responsive
+      self._run() # be very responsive and run regardless of lastRunTimestamp
+      
+   def _setTimestamp( self ):
+      self._lastRunTimestamp = getMsTimestamp()
+   
+   # @return True if its time for a run
+   def _evalTimestamp( self ):
+      return self._lastRunTimestamp < getMsTimestamp() - ( self._maxRunInterval * 1000 )
    
    def run( self, evalReturn = True ):
+      if self._evalTimestamp():
+         self._run()
+   
+   def _run( self ):
+      self._setTimestamp()
       if not self.isRefreshing and GlobalRuntime.refreshScreen:
          self.isRefreshing = True
          
@@ -38,7 +54,6 @@ class ScreenManager( Log ):
             self.printElements( self.screen )
             
          self.isRefreshing = False
-   
    
    def recursivePrintElements( self, element : object, lineCounter : int = 0, charCounter : int = 0, win : object = None ):
       # self.logStart( "recursivePrintElements", "line: {l} char: {ch} text: {t} {col} ({colv}) children {clen}{e}".format(

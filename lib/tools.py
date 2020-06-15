@@ -1,4 +1,9 @@
+import time
+
 EMPTY_STRING = ""
+
+def getMsTimestamp():
+   return int(round(time.time() * 1000))
 
 class BitState():
    

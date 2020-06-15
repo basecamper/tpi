@@ -35,7 +35,7 @@ class Control:
 if __name__ == "__main__":
    artc = len(sys.argv)
    if "debug" in sys.argv:
-      Global.DEBUG = True
+      Global.DEBUG_PRINT = True
       MAIN_RUN_SECONDS = 180
    
    try:

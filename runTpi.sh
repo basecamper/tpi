@@ -8,8 +8,8 @@ fi
 COMMAND="python3 ./tpi.py"
 
 case "$1" in
-	"-d"|"d"|"debug")
-		eval  "$COMMAND debug" 2>&1
+	*)
+		eval  "$COMMAND debug" >/dev/tty1 >&1
 		;;
 esac
 

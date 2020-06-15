@@ -1,8 +1,8 @@
-import time
+
 import sys
 
 from lib.glob import Global
-from lib.tools import EMPTY_STRING
+from lib.tools import EMPTY_STRING, getMsTimestamp
 
 class Log( object ):
    _statusLines = []
@@ -63,7 +63,7 @@ class Log( object ):
    @staticmethod
    def debug( className : str = None, method : str = None, message : str = None ):
       if message:
-         if Global.DEBUG:
+         if Global.DEBUG_PRINT or Global.DEBUG:
             sys.stderr.write( "{m} \n".format( m=message ) )
    
    @staticmethod
@@ -75,7 +75,7 @@ class Log( object ):
    def popStatus():
       Log._wasStatusChecked = True
       if len( Log._statusLines ):
-         now = int(round(time.time() * 1000))
+         now = getMsTimestamp()
          if (    not Log._popStatusTimestamp
               or Log._popStatusTimestamp < now - 100 ):
             Log._popStatusTimestamp = now

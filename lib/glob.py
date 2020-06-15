@@ -2,6 +2,7 @@ from enum import Enum
 
 class Global:
    DEBUG = False # disable curses screen / show Log.debug messages
+   DEBUG_PRINT = False # keep printing debug messages to stderr
    MAIN_RUN_SECONDS = 0.2 # run() interval
 
 class GlobalRuntime:

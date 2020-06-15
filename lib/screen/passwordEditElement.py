@@ -40,8 +40,6 @@ class PasswordEditElement( ScreenElement, HasState, HasStep, Log ):
       self._pwTextCurrentChar = "a"
       self._pwTextCurrentCharIndex = 0
       self._hideUnselectedChars = hideUnselectedChars
-      
-   
    
    def run( self ):
       self.logStart( "run" )
@@ -49,16 +47,17 @@ class PasswordEditElement( ScreenElement, HasState, HasStep, Log ):
          pass
       
       if self.hasStep( PasswordEditElement.STEP_START ):
-         self.log( "STEP_START" )
+         self.log( "executing STEP_START" )
          self.setExclusivePropagation( True )
+         
          self.setStep( PasswordEditElement.STEP_EDIT )
       
       if self.hasStep( PasswordEditElement.STEP_EDIT ):
-         self.log( "STEP_EDIT" )
+         self.log( "executing STEP_EDIT" )
          self.runPwTextElement()
       
       if self.hasStep( PasswordEditElement.STEP_CLEANUP ):
-         self.log( "STEP_CLEANUP" )
+         self.log( "executing STEP_CLEANUP" )
          self.setExclusivePropagation( False )
          self._pwTextCurrentCharIndex == 0
          self._pwTextPreElement.text = EMPTY_STRING
