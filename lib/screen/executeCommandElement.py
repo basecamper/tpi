@@ -11,7 +11,7 @@ class ExecuteCommandElement( ScreenElement ):
                  stopButton : object = None,
                  interval=10,
                  timeout=3 ):
-      super().__init__()
+      ScreenElement.__init__( self )
       self.startButton = startButton
       self.stopButton = stopButton
       self.osCommand = osCommand
@@ -21,10 +21,19 @@ class ExecuteCommandElement( ScreenElement ):
       
       self.started = None # keep track of the pushed buttons to be able to switch in case no 
       
-      self.startProcHandler = ProcHandler( self.osCommand.getStartCommand(), self._procStart, 1, 3 )
-      self.stopProcHandler = (    ProcHandler( self.osCommand.getStopCommand(), self._procStop, 1, 3 )
+      self.startProcHandler = ProcHandler( command=self.osCommand.getStartCommand(),
+                                           callback=self._procStart,
+                                           interval=1,
+                                           timeout=3 )
+      self.stopProcHandler = (    ProcHandler( command=self.osCommand.getStopCommand(),
+                                               callback=self._procStop,
+                                               interval=1,
+                                               timeout=3 )
                                if self.osCommand.getStopCommand() else None )
-      self.statusProcHandler = (    ProcHandler( self.osCommand.getStatusCommand(), self._procStatus, 1, 3 )
+      self.statusProcHandler = (    ProcHandler( command=self.osCommand.getStatusCommand(),
+                                                 callback=self._procStatus,
+                                                 interval=1,
+                                                 timeout=3 )
                                  if self.osCommand.getStatusCommand() else None )
    
    def start( self ):

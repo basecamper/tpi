@@ -5,16 +5,17 @@ from lib.screen import ScreenElement
 from lib.log import Log
 
 
-class PollingElement( ScreenElement ):
+class PollingElement( ScreenElement, Log ):
    def __init__( self, osCommand = None, interval : int = 5, timeout : int = 3 ):
-      super().__init__()
+      ScreenElement.__init__( self )
+      Log.__init__( self, className="PollingElement" )
       self.dataChildElement = ScreenElement()
       self.addChild( self.dataChildElement )
       self.osCommand = osCommand
-      self.dataProcHandler = ProcHandler( self.osCommand.getCommand(),
-                                          self._procResult,
-                                          interval,
-                                          timeout )
+      self.dataProcHandler = ProcHandler( command=self.osCommand.getCommand(),
+                                          callback=self._procResult,
+                                          interval=interval,
+                                          timeout=timeout )
    def run( self ):
       super().run()
       self.dataProcHandler.run()

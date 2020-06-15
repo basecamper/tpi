@@ -2,43 +2,53 @@ from lib.screen.screenColor import Color
 from lib.glob import Global, GlobalRuntime
 from lib.log import Log
 from lib.cursesWindow import CursesWindow
-from lib.screen.view import Overview
+from lib.screen.overview import Overview
 
 
 
-class ScreenManager():
+class ScreenManager( Log ):
    def __init__( self ):
+      Log.__init__( self, "ScreenManager" )
       self.cursesWindow = CursesWindow() if not Global.DEBUG else None
       self.screen = Overview()
       self.isRefreshing = False
    
+   def __del__( self ):
+      del( self.cursesWindow )
+      del( self.screen )
+      del( self )
+   
    def onButtonDown( self, button ):
-      self.screen.onButtonDown( button )
+      if not self.screen.propagateExclusiveButtonDown( button ):
+         self.screen.onButtonDown( button )
       self.run() # be very responsive
    
    def run( self, evalReturn = True ):
-      if not self.isRefreshing and not GlobalRuntime.lockScreen:
+      if not self.isRefreshing and GlobalRuntime.refreshScreen:
          self.isRefreshing = True
          
          self.screen.run()
          
+         if not Log.wasStatusChecked():
+            raise Exception("ScreenManager.run() latest status wasn't checked - make sure to Log.pop in a parent screenElement after all status are set")
+         
          if self.cursesWindow:
-            ScreenManager.printElements( self.screen, self.cursesWindow )
+            self.printElements( self.screen, self.cursesWindow )
          else:
-            ScreenManager.printElements( self.screen )
+            self.printElements( self.screen )
             
          self.isRefreshing = False
    
    
-   @staticmethod
-   def recursivePrintElements( element : object, lineCounter : int = 0, charCounter : int = 0, win : object = None ):
-      Log.debug( "line {char} char {char} text '{text}' {color} {colorValue} children {clen}".format(
-         line=lineCounter,
-         char=charCounter,
-         text=element.text,
-         color=element.color,
-         colorValue=element.color.value,
-         clen=len(element.getChildren()) ) )
+   def recursivePrintElements( self, element : object, lineCounter : int = 0, charCounter : int = 0, win : object = None ):
+      # self.logStart( "recursivePrintElements", "line: {l} char: {ch} text: {t} {col} ({colv}) children {clen}{e}".format(
+      #    l=lineCounter,
+      #    ch=charCounter,
+      #    t=element.text,
+      #    col=element.color,
+      #    colv=element.color.value,
+      #    clen=len(element.getChildren()),
+      #    e=" - LINEEND" if element.isEndingLine else "") )
       
       if element.text:
          if win:
@@ -46,20 +56,28 @@ class ScreenManager():
          charCounter += len(element.text)
       
       for child in element.getChildren():
-         lineCounter, charCounter = ScreenManager.recursivePrintElements( child, lineCounter, charCounter, win )
+         lineCounter, charCounter = self.recursivePrintElements( child, lineCounter, charCounter, win )
+      
       
       if element.isEndingLine:
-         Log.debug("endline {chars} chars".format(chars=charCounter))
+         # self.log( message="line: {l} char: {c} - LINEENDING".format( l=lineCounter, c=charCounter ) )
          charCounter = 0
          lineCounter += 1
       
+      # self.logEnd( printMessage=False )      
       return lineCounter, charCounter
    
-   @staticmethod
-   def printElements( screen, win = None ):
+   def printElements( self, screen, win = None ):
+      self.logStart( "printElements","cursesWindow: {win}".format( win=bool(win) ) )
       if win:
+         self.log("clearing curses window")
          win.clear()
-      ScreenManager.recursivePrintElements( screen, 0, 0, win )
+      
+      self.log("printing elements")
+      self.recursivePrintElements( screen, 0, 0, win )
+      
       if win:
+         self.log("refreshing curses window")
          win.refresh()
+      self.logEnd()
       

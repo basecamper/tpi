@@ -2,14 +2,32 @@ from enum import Enum
 from lib.screen.screenColor import Color
 from lib.log import Log
 
-class InteractiveElement:
-   def __init__( self, children : list ):
-      self._children = children
+class InteractiveElement( Log ):
+   def __init__( self,
+                 children : list = None,
+                 buttonProcMap : dict = None ):
+      Log.__init__( self, "InteractiveElement", printMessage=False )
+      self._children = children or []
+      self._exclusivePropagation = False
+      self._enablePropagation = True
+      self.buttonProcMap = {} if buttonProcMap == None else buttonProcMap
+   
+   def setExclusivePropagation( self, state : bool ):
+      self._exclusivePropagation = state
+   
+   def isExclusivePropagationRequired( self ):
+      return bool( self._exclusivePropagation )
+   
+   def setEnablePropagation( self, state : bool ):
+      self._enablePropagation = state
+   
+   def isPropagationEnabled( self ):
+      return bool( self._enablePropagation )
    
    def addChild( self, child ):
       self._children.append( child )
    
-   def addChildren( self, children ):
+   def addChildren( self, children : list ):
       for c in children:
          self._children.append( c )
    
@@ -20,45 +38,59 @@ class InteractiveElement:
       return self._children
    
    def run( self ):
-      Log.debug("InteractiveElement.run() children len {len}".format( len=len(self._children) ))
       for child in self.getChildren():
          child.run()
-      Log.debug( "InteractiveElement.run() OK" )
-      return ScreenReturn.OK
+   
+   # return True if a child required an exclusive callback
+   def propagateExclusiveButtonDown( self, button ):
+      self.logStart( "propagateExclusiveButtonDown", printMessage=False )
+      propagated = False
+      
+      if self.isExclusivePropagationRequired():
+         self.log( message="button {b}".format( b=button ) )
+         self.onButtonDown( button )
+         propagated = True
+      
+      for c in self.getChildren():
+         propagated |= c.propagateExclusiveButtonDown( button )
+      
+      self.logEnd( printMessage=False )
+      return propagated
    
    def onButtonDown( self, button ):
-      for c in self._children:
-         returnValue = c.onButtonDown( button )
-         if returnValue != ScreenReturn.OK:
-            return returnValue
-      return ScreenReturn.OK
+      self.logStart( "onButtonDown", printMessage=False )
+      buttonProc = self.buttonProcMap.get( button )
+      if buttonProc != None:
+         buttonProc( button )
+      
+      if self.isPropagationEnabled():
+         for c in self._children:
+            returnValue = c.onButtonDown( button )
+      else:
+         self.log( message="propagation blocked button: {b}".format( b=button ) )
+      self.logEnd( printMessage=False )
 
 
-class ScreenElement( InteractiveElement ):
+class ScreenElement( InteractiveElement, Log ):
    def __init__( self,
                  text = None,
                  color = Color.DEFAULT,
                  isEndingLine = None,
                  children = None,
-                 index = -1 ):
-      Log.debug(
-         "INIT ScreenElement, text: {text} color: {color} isEndingLine {isEndingLine} children {children} index {idx}".format(
-            text=text,
-            color=color,
-            isEndingLine=isEndingLine,
-            children=bool(children),
-            idx=index ) )
+                 index = -1,
+                 buttonProcMap : dict = None ):
       
-      super().__init__( children or [] )
+      InteractiveElement.__init__( self,
+                                   children=children,
+                                   buttonProcMap=buttonProcMap )
+      Log.__init__(  self,
+                     "ScreenElement",
+                     "text: {t} color: {col} isEndingLine {l} children {ch} index {i}".format(  t=text,
+                                                                                                col=color,
+                                                                                                l=isEndingLine,
+                                                                                                ch=bool(children),
+                                                                                                i=index ) )
       self.text = text
       self.color = color
       self.isEndingLine = isEndingLine or False
       self.index = index
-
-class ScreenReturn(Enum):
-   ERROR = 0,
-   OK = 1,
-   YES = 2,
-   NO = 3,
-   NEXT = 4,
-   PREV = 5

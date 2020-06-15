@@ -28,7 +28,7 @@ class OSPollCommand:
    def parseFunction( stdout, stderr ):
       return '-', Color.DEFAULT
 
-class GetGPUTempCommand(OSPollCommand):
+class GetGPUTempCommand( OSPollCommand ):
    @staticmethod
    def getCommand():
       return ['/opt/vc/bin/vcgencmd', 'measure_temp']
@@ -36,7 +36,7 @@ class GetGPUTempCommand(OSPollCommand):
    def parseFunction( stdout, stderr ):
       t = stdout.decode('utf-8')
       t = "%s.%s" % ( t[5:7], t[8] )
-      Log.debug("GetGPUTempCommand parsed {text}".format(text=t))
+      Log.debug("GetGPUTempCommand","parsed {text}".format(text=t))
       return "{t}°C".format( t=t ), getColorInRange( float( t ), 55, 65 )
 
 class GetCPUTempCommand(OSPollCommand):
@@ -47,7 +47,7 @@ class GetCPUTempCommand(OSPollCommand):
    def parseFunction( stdout, stderr ):
       t = stdout.decode('utf-8')
       t = "%s.%s" % ( t[0:2], t[2] )
-      Log.debug("GetCPUTempCommand parsed {text}".format(text=t))
+      Log.debug("GetCPUTempCommand","parsed {text}".format(text=t))
       return "{t}°C".format( t=t ), getColorInRange( float( t ), 55, 65 )
 
 class GetGPUMemUsageCommand(OSPollCommand):

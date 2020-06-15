@@ -15,11 +15,11 @@ class CursesWindow:
       curses.init_pair(Color.BLACKWHITE.value, curses.COLOR_BLACK, curses.COLOR_WHITE)
       
    def __del__( self ):
-      time.sleep(10)
-      curses.nocbreak()
-      self.stdscr.keypad(False)
+      self.stdscr.keypad(True)
       curses.echo()
+      curses.curs_set(1)
       curses.endwin()
+      del( self.stdscr )
    
    def clear( self ):
       self.stdscr.clear()
