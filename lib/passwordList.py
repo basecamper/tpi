@@ -4,8 +4,11 @@ from lib.procHandler import ProcHandler
 from lib.hasState import HasState
 from lib.hasStep import HasStep
 from lib.screen import ScreenElement
+from lib.configReader import ConfigReader
 
 class PasswordList( HasState, HasStep, Log ):
+
+   _configReader = ConfigReader.getInstance()
 
    STATE_BUSY  =                    0b100
    STATE_MOUNTED =                  0b010
@@ -18,13 +21,12 @@ class PasswordList( HasState, HasStep, Log ):
    STEP_SAVE_PASSWORDS = 4
    STEP_POST_SAVING = 5
    STEP_CLEANUP = 9
-
-   CRYPT_DIR = "./mnt"
-   CRYPTED_FILE = "./pws.bin"
-   SERIALIZED_DICT = "./mnt/pws.bin"
    
-   CRYPT_DEVICE = "passwords"
-   CRYPT_DEVICE_PATH = "/dev/mapper/passwords"
+   CRYPTED_FILE = _configReader.getData().get("crypted file")
+   CRYPT_DEVICE = _configReader.getData().get("crypt device")
+   CRYPT_DEVICE_PATH = _configReader.getData().get("crypt device path")
+   DECRYPTED_MOUNT_DIR = _configReader.getData().get("decrypted mount dir")
+   PASSWORDS_FILE_NAME = _configReader.getData().get("passwords file name")
    
    def __init__( self ):
       HasState.__init__( self )
@@ -33,7 +35,7 @@ class PasswordList( HasState, HasStep, Log ):
       self._map = {}
       
       self.mountedStatusProc = ProcHandler(     command=[   "mountpoint",
-                                                            PasswordList.CRYPT_DIR ],
+                                                            PasswordList.DECRYPTED_MOUNT_DIR ],
                                                 fullCallback=self._procMountStatus )
       self.cryptDeviceStatusProc = ProcHandler( command=[   "[ -e {file}]".format( file=PasswordList.CRYPT_DEVICE_PATH ) ],
                                                 fullCallback=self._procCryptDeviceStatus )
@@ -47,10 +49,10 @@ class PasswordList( HasState, HasStep, Log ):
                                                 fullCallback=self._procCryptClose )
       self.mountCryptDirProc = ProcHandler(     command=[   "mount",
                                                             PasswordList.CRYPT_DEVICE_PATH,
-                                                            PasswordList.CRYPT_DIR ],
+                                                            PasswordList.DECRYPTED_MOUNT_DIR ],
                                                 fullCallback=self._procMount )
       self.unmountCryptDirProc = ProcHandler(   command=[   "umount",
-                                                            PasswordList.CRYPT_DIR ],
+                                                            PasswordList.DECRYPTED_MOUNT_DIR ],
                                                 fullCallback=self._procUmount )
    
    

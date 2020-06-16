@@ -4,13 +4,19 @@ import sys
 from lib.button import ButtonHandler
 from lib.screenManager import ScreenManager
 from lib.glob import Global, GlobalRuntime
+from lib.configReader import ConfigReader
+from lib.log import Log
 
-class Control:
+class Control( Log ):
    
    screenManager = None
    buttonHandler = None
    
    def __init__( self ):
+      Log.__init__( self, "Control" )
+      
+      self.log( logMethod=False, message="config: {c}".format( c=ConfigReader.getInstance().getData() ) )
+      
       if Control.screenManager or Control.buttonHandler: # "enforce singleton..."
          raise Exception( "initialize Control once!")
       Control.screenManager = ScreenManager()
