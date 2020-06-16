@@ -1,7 +1,8 @@
 from lib.log import Log
 from lib.button import Button
 from lib.procHandler import ProcHandler
-from lib.tools import HasState, HasStep
+from lib.hasState import HasState
+from lib.hasStep import HasStep
 from lib.screen import ScreenElement
 
 class PasswordList( HasState, HasStep, Log ):

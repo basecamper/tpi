@@ -5,7 +5,8 @@ from lib.screen import ScreenElement
 from lib.log import Log
 from lib.passwordList import PasswordList
 from lib.procHandler import ProcHandler
-from lib.tools import HasState, HasStep
+from lib.hasState import HasState
+from lib.hasStep import HasStep
 from lib.screen.screenColor import Color
 from lib.screen.passwordEditElement import PasswordEditElement
 
@@ -68,16 +69,16 @@ class PasswordManagerElement( ScreenElement, HasState, HasStep, Log ):
       
          if not self._pwTextElement.isEditingActive():
             self.log( "not isEditingActive" )
-            
-            if self._pwTextElement.isPasswordValid():
-               self.log( "isPasswordValid" )
-               self.setStep( PasswordManagerElement.STEP_SHOW_CATEGORIES )
-               
-            else:
-               self.log( "not isPasswordValid" )
-               self._selectionElement.text = "failed"
-               Log.pushStatus( "failed", Color.RED )
-               self.setStep( PasswordManagerElement.STEP_CLEANUP )
+            # 
+            # if self._pwTextElement.isPasswordValid():
+            #    self.log( "isPasswordValid" )
+            #    self.setStep( PasswordManagerElement.STEP_SHOW_CATEGORIES )
+            #    
+            # else:
+            #    self.log( "not isPasswordValid" )
+            self._selectionElement.text = "failed"
+            Log.pushStatus( "failed", Color.RED )
+            self.setStep( PasswordManagerElement.STEP_CLEANUP )
       
       if self.hasStep( PasswordManagerElement.STEP_SHOW_CATEGORIES ):
          self.log( "STEP_SHOW_CATEGORIES" )
