@@ -3,7 +3,6 @@ from lib.button import Button
 from lib.procHandler import ProcHandler
 from lib.hasState import HasState
 from lib.hasStep import HasStep
-from lib.screen import ScreenElement
 from lib.configReader import ConfigReader
 
 class PasswordList( HasState, HasStep, Log ):

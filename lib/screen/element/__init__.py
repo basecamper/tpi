@@ -48,9 +48,13 @@ class InteractiveElement( Log ):
       propagated = False
       
       if self.isExclusivePropagationRequired():
-         self.log( message="button {b}".format( b=button ) )
-         self.onButtonDown( button )
-         propagated = True
+         buttonProc = self.buttonProcMap.get( button )
+         if buttonProc:
+            self.log( message="button {b}".format( b=button ) )
+            self.onButtonDown( button )
+            propagated = True
+         else:
+            self.log( message="button {b} not in buttonProcMap".format( b=button ) )
       
       for c in self.getChildren():
          propagated |= c.propagateExclusiveButtonDown( button )

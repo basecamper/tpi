@@ -1,16 +1,16 @@
 from lib.procHandler import ProcHandler
-from lib.screen import ScreenElement
-from lib.screen.pollingElement import PollingElement
 from lib.screen.screenColor import Color
+from lib.screen.element import ScreenElement
+from lib.screen.element.pollingElement import PollingElement
 
-class ExecuteCommandElement( ScreenElement ):
+class ExecuteCommandElement( ScreenElement ): # depreciated
    
    def __init__( self,
                  text : str,
                  startButton : object,
                  osCommand : object,
                  stopButton : object = None,
-                 interval=10,
+                 cooldown=10,
                  timeout=3 ):
       
       ScreenElement.__init__( self )
@@ -25,11 +25,11 @@ class ExecuteCommandElement( ScreenElement ):
       
       self.startProcHandler = ProcHandler( command=self.osCommand.getStartCommand(),
                                            callback=self._procStart,
-                                           interval=1,
+                                           cooldown=1,
                                            timeout=3 )
       self.stopProcHandler = (    ProcHandler( command=self.osCommand.getStopCommand(),
                                                callback=self._procStop,
-                                               interval=1,
+                                               cooldown=1,
                                                timeout=3 )
                                if self.osCommand.getStopCommand() else None )
       self.statusProcHandler = (    ProcHandler( command=self.osCommand.getStatusCommand(),

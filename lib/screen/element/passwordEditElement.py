@@ -3,9 +3,9 @@ from lib.button import Button
 from lib.tools import EMPTY_STRING
 from lib.hasState import HasState
 from lib.hasStep import HasStep
-from lib.screen import ScreenElement
-from lib.screen.screenColor import Color
 from lib.charPool import CharPoolManager
+from lib.screen.screenColor import Color
+from lib.screen.element import ScreenElement
 
 class PasswordEditElement( ScreenElement, HasState, HasStep, Log ):
    

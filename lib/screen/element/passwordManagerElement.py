@@ -1,14 +1,14 @@
 import pickle
 
 from lib.button import Button
-from lib.screen import ScreenElement
 from lib.log import Log
 from lib.passwordList import PasswordList
 from lib.procHandler import ProcHandler
 from lib.hasState import HasState
 from lib.hasStep import HasStep
 from lib.screen.screenColor import Color
-from lib.screen.passwordEditElement import PasswordEditElement
+from lib.screen.element import ScreenElement
+from lib.screen.element.passwordEditElement import PasswordEditElement
 
 class PasswordManagerElement( ScreenElement, HasState, HasStep, Log ):
    

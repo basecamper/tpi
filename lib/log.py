@@ -42,7 +42,7 @@ class Log( object ):
          method = self._methodNames[-1]
       Log.debug( message="      {m}".format( m=self.formatMsg( method, message ) ) )
    
-   def logError( self, message : str, logMethod : bool = True ):
+   def logError( self, message : str, logMethod : bool = True ): # TODO printMessage and logMethod
       method = None
       if logMethod and len(self._methodNames) > 0:
          method = self._methodNames[-1]

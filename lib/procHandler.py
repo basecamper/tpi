@@ -11,64 +11,73 @@ class ProcHandler( Log ):
                  command : list,
                  callback = None,
                  fullCallback = None,
-                 interval = 0,
+                 cooldown = 0,
                  timeout = 3 ):
       Log.__init__( self,
                     className="ProcHandler",
-                    message="command {command} interval {i} timeout {t}".format(command=command, i=interval, t=timeout) )
+                    message="command {command} cooldown {c} timeout {t}".format(command=command, c=cooldown, t=timeout) )
       
-      self.command = command
-      self.callback = callback
-      self.fullCallback = fullCallback
-      self.interval = interval
-      self.timeout = timeout
-      self.intervalTimestamp = None
-      self.proc = None
-      self.thread = None
-   
-   def _callback( self, stdout, stderr ):
-      if self.fullCallback != None:
-         self.fullCallback( self.proc )
-      
-      if self.callback != None:
-         self.callback( stdout, stderr )
+      self._command = command
+      self._callback = callback
+      self._fullCallback = fullCallback
+      self._cooldown = cooldown
+      self._timeout = timeout
+      self._cooldownTimestamp = None
+      self._proc = None
+      self._thread = None
    
    def run( self ):
       self.logStart( "run" )
-      if self.interval > 0:
+      
+      if self._cooldown > 0:
          if self._evalSetTimestamp():
-            self.log("interval reached")
             self._runThread()
       else:
          self._runThread()
+      
       self.logEnd()
-
+   
+   def _onProcessFinished( self, stdout, stderr ):
+      if self._fullCallback != None:
+         self._fullCallback( self._proc )
+      
+      if self._callback != None:
+         self._callback( stdout, stderr )
+   
+   def _getTimestampPassedSeconds( self, now : object = None ):
+      return ( ( now or datetime.now() ) - self._cooldownTimestamp ).seconds
+   
    def _evalSetTimestamp( self ):
-      if (    self.intervalTimestamp == None
-           or ( datetime.now() - self.intervalTimestamp ).seconds > self.interval ):
-         self.intervalTimestamp = datetime.now()
+      self.logStart( "_evalSetTimestamp" )
+      
+      now = datetime.now()
+      if not self._cooldownTimestamp or ( self._getTimestampPassedSeconds( now=now ) > self._cooldown ):
+         self.logEnd( "cooldown passed, timestamp: {t} now: {n}".format( t=self._cooldownTimestamp, n=now ) )
+         self._cooldownTimestamp = now
          return True
+      
+      self.logEnd( printMessage=False )
       return False
             
    def _runThread( self ):
       self.logStart( "_runThread" )
-      if not self.thread or not self.thread.isAlive():
-         self.log( "creating thread {c}".format( c=self.command ) )
-         self.thread = threading.Thread(target=self._runInThread, args=( self._callback, self.command ))
-         self.thread = self.thread.start()
+      if not self._thread or not self._thread.isAlive():
+         self.log( "creating thread {c}".format( c=self._command ) )
+         self._thread = threading.Thread(target=self._runInThread, args=( self._onProcessFinished, self._command ))
+         self._thread = self._thread.start()
       self.logEnd()
    
    def _runInThread( self, func, args ):
-      self.proc = Popen( args, stdout=PIPE, close_fds=True )
-      if self.timeout > 0:
+      self._proc = Popen( args, stdout=PIPE, close_fds=True )
+      if self._timeout > 0:
          try:
-            stdout, stderr = self.proc.communicate(timeout=self.timeout)
+            stdout, stderr = self._proc.communicate(timeout=self._timeout)
             self.logEvent( method="_runInThread", message="subprocess finished command: {c}".format( c=args ) )
          except TimeoutExpired:
             self.proc.kill()
             self.logEvent( method="_runInThread", message="subprocess due to timeout cancelled! command: {c}".format( c=args ) )
       else:
-         stdout, stderr = self.proc.communicate()
+         stdout, stderr = self._proc.communicate()
       if func:
          func( stdout, stderr )
       return ( stdout, stderr )

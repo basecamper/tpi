@@ -3,12 +3,12 @@ from datetime import datetime
 
 from lib.log import Log
 from lib.procHandler import ProcHandler
-from lib.screen import ScreenElement
+from lib.screen.element import ScreenElement
 
 
 class PollingElement( ScreenElement, Log ):
    
-   def __init__( self, osCommand = None, interval : int = 5, timeout : int = 3 ):
+   def __init__( self, osCommand = None, cooldown : int = 5, timeout : int = 3 ):
       ScreenElement.__init__( self )
       Log.__init__( self, className="PollingElement" )
       self.dataChildElement = ScreenElement()
@@ -16,7 +16,7 @@ class PollingElement( ScreenElement, Log ):
       self.osCommand = osCommand
       self.dataProcHandler = ProcHandler( command=self.osCommand.getCommand(),
                                           callback=self._procResult,
-                                          interval=interval,
+                                          cooldown=cooldown,
                                           timeout=timeout )
    
    def run( self ):

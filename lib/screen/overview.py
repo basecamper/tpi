@@ -6,12 +6,12 @@ from lib.glob import GlobalRuntime
 from lib.log import Log
 from lib.button import Button
 from lib.procHandler import ProcHandler
-from lib.screen import ScreenElement
-from lib.screen.currentTimeElement import CurrentTimeElement
-from lib.screen.pollingElement import PollingElement
-from lib.screen.executeCommandElement import ExecuteCommandElement
 from lib.screen.mainMenu import MainMenu
 from lib.screen.screenColor import Color
+from lib.screen.element import ScreenElement
+from lib.screen.element.currentTimeElement import CurrentTimeElement
+from lib.screen.element.pollingElement import PollingElement
+from lib.screen.element.executeCommandElement import ExecuteCommandElement
 
 class Overview( ScreenElement, Log ):
 
@@ -20,13 +20,13 @@ class Overview( ScreenElement, Log ):
                               children=[ ScreenElement( children=[ CurrentTimeElement( "%d.%m  %H:%M:%S" ) ],
                                                         isEndingLine=True ),
                                          ScreenElement( children=[ ScreenElement( text="GPU ", color=Color.DEFAULT ),
-                                                                   PollingElement( osCommand=osPollCommand.GetGPUTempCommand, interval=10, timeout=3 ),
+                                                                   PollingElement( osCommand=osPollCommand.GetGPUTempCommand, cooldown=10, timeout=3 ),
                                                                    ScreenElement( text=" ", color=Color.DEFAULT ),
-                                                                   PollingElement( osCommand=osPollCommand.GetGPUMemUsageCommand, interval=10, timeout=3 )
+                                                                   PollingElement( osCommand=osPollCommand.GetGPUMemUsageCommand, cooldown=10, timeout=3 )
                                                                  ],
                                                         isEndingLine=True ),
                                          ScreenElement( children=[ ScreenElement( text="CPU ", color=Color.DEFAULT ),
-                                                                   PollingElement( osCommand=osPollCommand.GetCPUTempCommand, interval=10, timeout=3 ) ],
+                                                                   PollingElement( osCommand=osPollCommand.GetCPUTempCommand, cooldown=10, timeout=3 ) ],
                                                         isEndingLine=True ) ],
                               buttonProcMap={ Button.PRESS : self.okProc } )
       Log.__init__( self, "Overview" )
