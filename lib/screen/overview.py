@@ -1,7 +1,6 @@
 from enum import Enum
 
-from lib import osCommand
-from lib import osPollCommand
+from lib.osPollCommand import GetGPUTempCommand, GetGPUMemUsageCommand, GetCPUTempCommand
 from lib.glob import GlobalRuntime
 from lib.log import Log
 from lib.button import Button
@@ -13,6 +12,8 @@ from lib.screen.element.currentTimeElement import CurrentTimeElement
 from lib.screen.element.pollingElement import PollingElement
 from lib.screen.element.executeCommandElement import ExecuteCommandElement
 
+CMD_DISPLAY_SPLASH = ['dd','if=/opt/splash.bmp','of=/dev/fb1','bs=655555','count=1','status=none']
+
 class Overview( ScreenElement, Log ):
 
    def __init__( self ):
@@ -20,15 +21,21 @@ class Overview( ScreenElement, Log ):
                               children=[ ScreenElement( children=[ CurrentTimeElement( "%d.%m  %H:%M:%S" ) ],
                                                         isEndingLine=True ),
                                          ScreenElement( children=[ ScreenElement( text="GPU ", color=Color.DEFAULT ),
-                                                                   PollingElement( osCommand=osPollCommand.GetGPUTempCommand, cooldown=10, timeout=3 ),
+                                                                   PollingElement( osCommand=GetGPUTempCommand,
+                                                                                   cooldown=10,
+                                                                                   timeout=3 ),
                                                                    ScreenElement( text=" ", color=Color.DEFAULT ),
-                                                                   PollingElement( osCommand=osPollCommand.GetGPUMemUsageCommand, cooldown=10, timeout=3 )
+                                                                   PollingElement( osCommand=GetGPUMemUsageCommand,
+                                                                                   cooldown=10,
+                                                                                   timeout=3 )
                                                                  ],
                                                         isEndingLine=True ),
                                          ScreenElement( children=[ ScreenElement( text="CPU ", color=Color.DEFAULT ),
-                                                                   PollingElement( osCommand=osPollCommand.GetCPUTempCommand, cooldown=10, timeout=3 ) ],
+                                                                   PollingElement( osCommand=GetCPUTempCommand,
+                                                                                   cooldown=10,
+                                                                                   timeout=3 ) ],
                                                         isEndingLine=True ) ],
-                              buttonProcMap={ Button.PRESS : self.okProc } )
+                              buttonDownMap={ Button.PRESS : self.toggleSplash } )
       Log.__init__( self, "Overview" )
       self.menu = MainMenu()
       self.statusLine = ScreenElement( isEndingLine=True )
@@ -36,7 +43,7 @@ class Overview( ScreenElement, Log ):
       self.addChild( self.menu )
       self.addChild( self.statusLine )
       
-      self.splashProcHandler = ProcHandler( command=osCommand.DisplaySplashImageCommand.getStartCommand() )
+      self.splashProcHandler = ProcHandler( command=CMD_DISPLAY_SPLASH )
       
       self.splashDisplayed = False
       self.enableSplash()
@@ -53,12 +60,7 @@ class Overview( ScreenElement, Log ):
          self.statusLine.color = color
       self.logEnd()
    
-   def okProc( self, button ):
-      self.logStart("okProc")
-      self.toggleSplash()
-      self.logEnd()
-   
-   def toggleSplash( self ):
+   def toggleSplash( self, button ):
       self.logStart("toggleSplash")
       if self.splashDisplayed:
          self.disableSplash()
@@ -69,6 +71,7 @@ class Overview( ScreenElement, Log ):
    def enableSplash( self ):
       self.logStart("enableSplash")
       GlobalRuntime.refreshScreen = False
+      self.setExclusivePropagation( True )
       self.setEnablePropagation( False )
       self.splashDisplayed = True
       self.splashProcHandler.run()
@@ -77,6 +80,7 @@ class Overview( ScreenElement, Log ):
    def disableSplash( self ):
       self.logStart("disableSplash")
       GlobalRuntime.refreshScreen = True
+      self.setExclusivePropagation( False )
       self.setEnablePropagation( True )
       self.splashDisplayed = False
       self.logEnd()

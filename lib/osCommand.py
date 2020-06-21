@@ -38,12 +38,6 @@ class PoweroffCommand(OSCommand):
       return ['poweroff']
 
 
-
-class DisplaySplashImageCommand(OSCommand):
-   @staticmethod
-   def getStartCommand():
-      return ['dd','if=/opt/splash.bmp','of=/dev/fb1','bs=655555','count=1','status=none']
-
 class WpaSupplicantCommand(OSCommand):
    @staticmethod
    def getStartCommand():

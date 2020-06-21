@@ -4,33 +4,17 @@ from lib.button import Button
 from lib.log import Log
 from lib.passwordList import PasswordList
 from lib.procHandler import ProcHandler
-from lib.hasState import HasState
-from lib.hasStep import HasStep
 from lib.screen.screenColor import Color
 from lib.screen.element import ScreenElement
 from lib.screen.element.passwordEditElement import PasswordEditElement
+from lib.screen.textConst import TEXT, COLOR
 
-class PasswordManagerElement( ScreenElement, HasState, HasStep, Log ):
-   
-   STEP_START_REQUIRED = 0
-   STEP_STARTED = 1
-   STEP_GET_PASSWORD = 2
-   STEP_INIT = 3
-   STEP_SHOW_CATEGORIES = 4
-   STEP_CLEANUP = 5
-   
-   STATE_STARTED =          0b10
-   STATE_PASSWORDS_LOADED = 0b01
+class PasswordManagerElement( ScreenElement, Log ):
    
    def __init__( self ):
       ScreenElement.__init__( self,
-                              buttonProcMap={ Button.LEFT : self.cancelProc,
-                                              Button.RIGHT : self.okProc,
-                                              Button.UP : self.prevProc,
-                                              Button.DOWN : self.nextProc } )
-      HasState.__init__( self )
-      HasStep.__init__( self,
-                        startStep=PasswordManagerElement.STEP_START_REQUIRED )
+                              buttonDownMap={ Button.LEFT : self.onCancelButtonDown,
+                                              Button.RIGHT : self.onOkButtonDown } )
       Log.__init__( self, className="PasswordManagerElement" )
       
       self._titleElement = ScreenElement( isEndingLine=True, text="[pwman]" )
@@ -41,82 +25,44 @@ class PasswordManagerElement( ScreenElement, HasState, HasStep, Log ):
       self.addChild( self._selectionElement )
       self.addChild( self._pwTextElement )
       
-      self.passwordList = PasswordList()
+      self._passwordList = PasswordList()
+      
       self.setEnablePropagation( False )
-      Log.pushStatus( "initialized", Color.BLACKWHITE )
    
-   def run( self ):
-      self.logStart( "run","step: {step}".format( step=self.getStep() ) )
-      
-      if self.hasStep( PasswordManagerElement.STEP_START_REQUIRED ):
-         self.log( "STEP_START_REQUIRED" )
-         self._selectionElement.text = "> start"
-      
-      if self.hasStep( PasswordManagerElement.STEP_STARTED ):
-         self.log( "STEP_STARTED" )
-         
-         if self.hasState( PasswordManagerElement.STATE_PASSWORDS_LOADED ):
-            self.log( "STATE_PASSWORDS_LOADED" )
-            self.setStep( PasswordManagerElement.STEP_SHOW_CATEGORIES )
-         
-         else:
-            self.setStep( PasswordManagerElement.STEP_GET_PASSWORD )
-            self._pwTextElement.startEditing()
-      
-      if self.hasStep( PasswordManagerElement.STEP_GET_PASSWORD ):
-         self.log( "STEP_GET_PASSWORD" )
-         self._selectionElement.text = "> enter pw"
-      
-         if not self._pwTextElement.isEditingActive():
-            self.log( "not isEditingActive" )
-            # 
-            # if self._pwTextElement.isPasswordValid():
-            #    self.log( "isPasswordValid" )
-            #    self.setStep( PasswordManagerElement.STEP_SHOW_CATEGORIES )
-            #    
-            # else:
-            #    self.log( "not isPasswordValid" )
-            self._selectionElement.text = "failed"
-            Log.pushStatus( "failed", Color.RED )
-            self.setStep( PasswordManagerElement.STEP_CLEANUP )
-      
-      if self.hasStep( PasswordManagerElement.STEP_SHOW_CATEGORIES ):
-         self.log( "STEP_SHOW_CATEGORIES" )
-         self._selectionElement.text = "gmx"
-      
-      if self.hasStep( PasswordManagerElement.STEP_CLEANUP ):
-         self.log( "STEP_CLEANUP" )
-         self.startStep()
-      
-      super().run()
-      self.logEnd( "step: {step}".format( step=self.getStep() ) )
-      
-   def okProc( self, button ):
-      self.logStart( "okProc","button {b} step {s}".format( b=button, s=self.getStep() ) )
-      if self.hasStep( PasswordManagerElement.STEP_START_REQUIRED ):
-         self.setStep( PasswordManagerElement.STEP_STARTED )
+   def onPwEditFinished( self, password : str ):
+      self.logStart( "onPwEditFinished","password {p}".format( p=password ) )
+      self._passwordList.loadPasswords( password=password,
+                                        onSuccess=self.onPasswordLoadSuccess,
+                                        onError=self.onPasswordLoadError )
+      self._editingPassword = False
       self.logEnd()
    
-   def cancelProc( self, button ):
-      self.logStart( "cancelProc","button {b} step {s}".format( b=button, s=self.getStep() ) )
-      if self.hasStep( PasswordManagerElement.STEP_GET_PASSWORD ):
+   def onPasswordLoadSuccess( self ):
+      Log.pushStatus( "pw loaded", COLOR.STATUS_SUCCESS )
+   
+   def onPasswordLoadError( self ):
+      Log.pushStatus( "ERR loading pw", COLOR.STATUS_ERROR )
+   
+   def onOkButtonDown( self, button ):
+      self.logStart( "onOkButtonDown","button {b}".format( b=button ) )
+      
+      if self._passwordList.isLoaded():
          pass
-      self.log( "cancelProc" )
+      else:
+         self._pwTextElement.startEditing( onEditingFinished=self.onPwEditFinished )
+         self._selectionElement.text, self._selectionElement.color = "main pw>", Color.DEFAULT
+         Log.pushStatus( "start edit", COLOR.STATUS_DEFAULT )
+      
       self.logEnd()
    
-   def prevProc( self, button ):
-      self.logStart( "prevProc","button {b} step {s}".format( b=button, s=self.getStep() ) )
-      if self.hasStep( PasswordManagerElement.STEP_GET_PASSWORD ):
-         return
-      self.log( "prevProc" )
+   def onCancelButtonDown( self, button ):
+      self.logStart( "onCancelButtonDown","button {b}".format( b=button ) )
+      self.logEnd()
+   
+   def onPrevButtonDown( self, button ):
+      self.logStart( "onPrevButtonDown","button {b}".format( b=button ) )
       self.logEnd()
       
-   def nextProc( self, button ):
-      self.logStart( "nextProc","button {b} step {s}".format( b=button, s=self.getStep() ) )
-      if self.hasStep( PasswordManagerElement.STEP_GET_PASSWORD ):
-         return
-      self.log( "nextProc" )
+   def onNextButtonDown( self, button ):
+      self.logStart( "onNextButtonDown","button {b}".format( b=button ) )
       self.logEnd()
-
-
-      

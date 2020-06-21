@@ -1,15 +1,20 @@
 from lib.log import Log
 from lib.button import Button
 from lib.screen.screenColor import Color
-from lib.screen.element import ScreenElement
 from lib.screen.element.passwordManagerElement import PasswordManagerElement
 from lib.screen.element.simpleOsCommandElement import SimpleOsCommandElement
+from lib.screen.element import ScreenElement
 
 class MainMenu( ScreenElement, Log ):
    
    menuItems = [ PasswordManagerElement(),
-                 SimpleOsCommandElement( text="reboot", button=Button.RIGHT, command=["reboot"] ),
-                 SimpleOsCommandElement( text="poweroff", button=Button.RIGHT, command=["poweroff"] ) ]
+                 ScreenElement( children=[ SimpleOsCommandElement( text="reboot", button=Button.RIGHT, command=["reboot"] ),
+                                ScreenElement( isEndingLine=True ),ScreenElement( isEndingLine=True )
+                 ]),
+                 ScreenElement( children=[ SimpleOsCommandElement( text="poweroff", button=Button.RIGHT, command=["poweroff"] ),
+                                ScreenElement( isEndingLine=True ),ScreenElement( isEndingLine=True )
+                 ])
+                  ]
    
    def __init__( self,
                  buttonNext = None,
@@ -17,8 +22,8 @@ class MainMenu( ScreenElement, Log ):
       ScreenElement.__init__( self )
       Log.__init__( self, "MainMenu", "buttonNext: {bn} buttonPrev: {bp}".format( bn=buttonNext, bp=buttonPrev ) )
       
-      self._buttonNext = buttonNext or Button.UP
-      self._buttonPrev = buttonPrev or Button.DOWN
+      self._buttonNext = buttonNext or Button.DOWN
+      self._buttonPrev = buttonPrev or Button.UP
       
       self._activeElementWrapper = ScreenElement( isEndingLine=True )
       self.addChildren( [ ScreenElement( text="---------------", isEndingLine=True, color=Color.BLACKWHITE ),
@@ -28,7 +33,7 @@ class MainMenu( ScreenElement, Log ):
       self._activeElementIndex = 0
       self._setActiveElement()
       
-      # manually forwarding to children, if required they should set exclusivePropagation which overrules this flag
+      # manually forward button events to children, if required they should set exclusivePropagation which overrules this flag
       self.setEnablePropagation( False )
    
    def _getActiveElement( self ):

@@ -1,5 +1,3 @@
-from lib.hasState import HasState
-from lib.hasStep import HasStep
 from lib.log import Log
 
 class CharPool( Log ):
@@ -86,55 +84,56 @@ class CharPool( Log ):
       self._poolString = _poolString.lower()
       return self
 
-class CharPoolManager( HasState, HasStep, Log ):
-   
-   STATE_MOD_CAPS =    0b1
-   
-   STEP_STANDARD = 0
-   STEP_NUMBERS = 1
-   STEP_SYMBOLS = 2
+class CharPoolManager( Log ):
    
    def __init__( self ):
-      HasState.__init__( self )
-      HasStep.__init__( self, CharPoolManager.STEP_STANDARD )
-      Log.__init__( self, "CharPoolManager" )
       
-      self._poolMap = { CharPoolManager.STEP_STANDARD : CharPool( "abcdefghijklmnopqrstuvwxyz" ),
-                        CharPoolManager.STEP_NUMBERS  : CharPool( "0123456789" ),
-                        CharPoolManager.STEP_SYMBOLS  : CharPool( '''!"#$%&'()*#,-./:;<=>?@[\]^_|~''' ) }
+      Log.__init__( self, "CharPoolManager" )
+      self._isCapsActive = False
+      self._characters = CharPool( "abcdefghijklmnopqrstuvwxyz" )
+      self._numbers = CharPool( "0123456789" )
+      self._symbols = CharPool( '''!"#$%&'()*#,-./:;<=>?@[\]^_|~''' )
+      self._activePool = self._characters
    
-   def toggleStep( self, step ):
-      self.logStart("toggleStep")
-      if self.hasStep( step ):
-         self.setStep( CharPoolManager.STEP_STANDARD )
+   def toggleCharacters( self ):
+      if self._activePool != self._characters:
+         self._activePool = self._characters
       else:
-         self.setStep( step )
-      self.logEnd( str( self.getStep() ) )
+         self._isCapsActive = not self._isCapsActive
    
-   def _getPool( self ):
-      self.logStart("_getPool step: {s}".format( s=self.getStep() ) )
-      self.logEnd( "{s}".format( s=( self._poolMap.get( self.getStep() ) ) ))
-      return self._poolMap.get( self.getStep() )
+   def toggleNumbers( self ):
+      if self._activePool != self._numbers:
+         self._activePool = self._numbers
+      else:
+         self.toggleCharacters()
+   
+   def toggleSymbols( self ):
+      if self._activePool != self._symbols:
+         self._activePool = self._symbols
+      else:
+         self.toggleCharacters()
+   
+   def getCharacter( self ):
+      self.logStart("getCharacter")
+      c = self._activePool.get()
+      
+      if self._isCapsActive:
+         c = c.upper()
+         self.logEnd("returning: {c}".format( c=c ))
+         return c
+      
+      self.logEnd("returning: {c}".format( c=c ))
+      return c
    
    def next( self ):
       self.logStart("next")
-      newChar = self._getPool().next()
+      newChar = self._activePool.next()
       self.logEnd("returning: {c}".format( c=newChar ))
       return newChar
    
    def prev( self ):
       self.logStart("prev")
-      newChar = self._getPool().prev()
+      newChar = self._activePool.prev()
       self.logEnd("returning: {c}".format( c=newChar ))
       return newChar
-   
-   def getCharacter( self ):
-      self.logStart("getCharacter")
-      
-      if self.hasState( CharPoolManager.STATE_MOD_CAPS ):
-         self.logEnd("returning: {c}".format( c=( self._getPool().get().upper() ) ))
-         return self._getPool().get().upper()
-      
-      self.logEnd("returning: {c}".format( c=( self._getPool().get() ) ))
-      return self._getPool().get()
    

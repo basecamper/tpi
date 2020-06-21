@@ -1,206 +1,172 @@
 from lib.log import Log
 from lib.button import Button
-from lib.procHandler import ProcHandler
-from lib.hasState import HasState
-from lib.hasStep import HasStep
+from lib.procHandler import ProcHandler, ProcHandlerChain
 from lib.configReader import ConfigReader
+from lib.screen.textConst import TEXT, COLOR
 
-class PasswordList( HasState, HasStep, Log ):
+_configReader = ConfigReader.getInstance()
 
-   _configReader = ConfigReader.getInstance()
+CRYPTED_FILE =        _configReader.getData().get("crypted file")
+CRYPT_DEVICE =        _configReader.getData().get("crypt device")
+CRYPT_DEVICE_PATH =   _configReader.getData().get("crypt device path")
+DECRYPTED_MOUNT_DIR = _configReader.getData().get("decrypted mount dir")
+PASSWORDS_FILE_NAME = _configReader.getData().get("passwords file name")   
 
-   STATE_BUSY  =                    0b100
-   STATE_MOUNTED =                  0b010
-   STATE_CRYPT_OPENED =             0b001
+MOUNT_STATUS_HANDLER =        ProcHandler( command=[ "mountpoint", DECRYPTED_MOUNT_DIR ] )
+CRYPT_CLOSE_HANDLER =         ProcHandler( command=[ "cryptsetup", "close", CRYPT_DEVICE ] )
+MOUNT_HANDLER =               ProcHandler( command=[ "mount", "{d}/{f}".format( d=CRYPT_DEVICE_PATH, f=CRYPT_DEVICE), DECRYPTED_MOUNT_DIR ] )
+UMOUNT_HANDLER =              ProcHandler( command=[ "umount", DECRYPTED_MOUNT_DIR ] )
+
+def _getOpenCryptDeviceHandler( password : str ):
+   return ProcHandler( command=[ "cryptsetup", "open", CRYPTED_FILE, CRYPT_DEVICE, "-d", "-" ],
+                       stdin=password )
+
+class _PasswordGenerator():
+   @staticmethod
+   def get( self ):
+      return "test"
+
+class _AccountMap( Log ):
+   def __init__( self ):
+      Log.__init__( self, "_AccountMap" )
+      self._map = {}
+      self._isLoaded = False
    
-   STEP_INIT = 0
-   STEP_IDLE = 1
-   STEP_LOAD_PASSWORDS = 2
-   STEP_POST_LOADING = 3
-   STEP_SAVE_PASSWORDS = 4
-   STEP_POST_SAVING = 5
-   STEP_CLEANUP = 9
+   def isLoaded( self ):
+      return bool( self._isLoaded )
    
-   CRYPTED_FILE = _configReader.getData().get("crypted file")
-   CRYPT_DEVICE = _configReader.getData().get("crypt device")
-   CRYPT_DEVICE_PATH = _configReader.getData().get("crypt device path")
-   DECRYPTED_MOUNT_DIR = _configReader.getData().get("decrypted mount dir")
-   PASSWORDS_FILE_NAME = _configReader.getData().get("passwords file name")
+   def loadFromFile( self, filename ):
+      self.logStart( "_loadFromFile" )
+      try:
+         with open( filename, "rb" ) as file:
+            del( self._map )
+            self._map = pickle.load( file )
+      except Exception as e:
+         return False
+      self._isLoaded = True
+      return True
+      self.logEnd()
+   
+   def saveToFile( self, filename ):
+      self.logStart( "_saveToFile" )
+      try:
+         with open( filename, "wb" ) as file:
+            pickle.dump( self._map, file, pickle.HIGHEST_PROTOCOL )
+      except Exception as e:
+         self.logError("writing")
+         return False
+      self.logEnd()
+      return True
+   
+   def evalAddEntry( self,
+                     group : str,
+                     entryName : str,
+                     userName : str,
+                     email : str = None,
+                     password : str = None ):
+      existingGroup = self._map.get( group )
+      
+      if existingGroup:
+         if existingGroup.get( entryName ):
+            return False
+      else:
+         existingGroup = {}
+         self._map[ group ] = existingGroup
+      
+      existingGroup[ entryName ] = { "user" : userName,
+                                    "email" : email or "",
+                                 "password" : password or "" }
+      return True
+
+class PasswordList( Log ):
    
    def __init__( self ):
-      HasState.__init__( self )
-      HasStep.__init__( self, PasswordList.STEP_INIT )
       Log.__init__( self, "PasswordList" )
-      self._map = {}
       
-      self.mountedStatusProc = ProcHandler(     command=[   "mountpoint",
-                                                            PasswordList.DECRYPTED_MOUNT_DIR ],
-                                                fullCallback=self._procMountStatus )
-      self.cryptDeviceStatusProc = ProcHandler( command=[   "[ -e {file}]".format( file=PasswordList.CRYPT_DEVICE_PATH ) ],
-                                                fullCallback=self._procCryptDeviceStatus )
-      self.cryptOpenProc = ProcHandler(         command=[   "cryptsetup",
-                                                            "open",
-                                                            PasswordList.CRYPT_DEVICE ],
-                                                fullCallback=self._procCryptOpen )
-      self.cryptCloseProc = ProcHandler(        command=[   "cryptsetup",
-                                                            "close",
-                                                            PasswordList.CRYPT_DEVICE ],
-                                                fullCallback=self._procCryptClose )
-      self.mountCryptDirProc = ProcHandler(     command=[   "mount",
-                                                            PasswordList.CRYPT_DEVICE_PATH,
-                                                            PasswordList.DECRYPTED_MOUNT_DIR ],
-                                                fullCallback=self._procMount )
-      self.unmountCryptDirProc = ProcHandler(   command=[   "umount",
-                                                            PasswordList.DECRYPTED_MOUNT_DIR ],
-                                                fullCallback=self._procUmount )
+      self._accountMap = _AccountMap()
+      self._openChain = None
+      
+      self._closeChain = ProcHandlerChain( procHandlerChain=[ UMOUNT_HANDLER,
+                                                              CRYPT_CLOSE_HANDLER ] )
+      
+      self._umountChain = ProcHandlerChain( procHandlerChain=[ UMOUNT_HANDLER ] )
+      
+      self._cryptCloseHandler = ProcHandlerChain( procHandlerChain=[ CRYPT_CLOSE_HANDLER ]  )
+      
+      self._parentOnSuccess = None
+      self._parentOnError = None
    
+   def isLoaded( self ):
+      return self._accountMap.isLoaded()
+   
+   def loadPasswords( self, password : str, onSuccess : object, onError : object ):
+      self.logStart( "loadPasswords","password {p}" )
+      Log.pushStatus( "opening", COLOR.STATUS_SUCCESS )
+      self._parentOnSuccess = onSuccess
+      self._parentOnError = onError
+      
+      self._openChain = ProcHandlerChain(
+         procHandlerChain=[ _getOpenCryptDeviceHandler( password ),
+                            MOUNT_HANDLER ]
+         )
+         
+      self._openChain.run( onSuccess=self._onSuccessOpenLoad,
+                           onError=self._onError )
+      self.logEnd()
+   
+   def savePasswords( self, password : str, onSuccess : object, onError : object ):
+      self.logStart( "savePasswords","password {p}" )
+      Log.pushStatus( "opening", COLOR.STATUS_SUCCESS )
+      self._parentOnSuccess = onSuccess
+      self._parentOnError = onError
+      
+      self._openChain = ProcHandlerChain(
+         procHandlerChain=[ _getOpenCryptDeviceHandler( password ),
+                            MOUNT_HANDLER ]
+         )
+         
+      self._openChain.run( onSuccess=self._onSuccessOpenSave, onError=self._onError )
+      self.logEnd()
+   
+   def _onSuccessOpenLoad( self ):
+      self.logEvent( "_onSuccessOpenLoad" )
+      Log.pushStatus( "opened", COLOR.STATUS_SUCCESS )
+      self._accountMap.loadFromFile( "{d}/{f}".format( d=DECRYPTED_MOUNT_DIR, f=PASSWORDS_FILE_NAME ) )
+      Log.pushStatus( "loaded", COLOR.STATUS_SUCCESS )
+      self._closeChain.run( onSuccess=self._onSuccessClose,
+                              onError=self._onError )
+   
+   def _onSuccessOpenSave( self ):
+      self.logEvent( "_onSuccessOpenSave" )
+      Log.pushStatus( "opened", COLOR.STATUS_SUCCESS )
+      self._accountMap.saveToFile( "{d}/{f}".format( d=DECRYPTED_MOUNT_DIR, f=PASSWORDS_FILE_NAME ) )
+      Log.pushStatus( "saved", COLOR.STATUS_SUCCESS )
+      self._closeChain.run( onSuccess=self._onSuccessClose,
+                              onError=self._onError )
+   
+   def _onSuccessClose( self ):
+      self.logEvent( "_onSuccessClose" )
+      Log.pushStatus( "closed", COLOR.STATUS_SUCCESS )
+      self._parentOnSuccess()
+   
+   def _onError( self ):
+      self.logEvent( "_onError" )
+      Log.pushStatus( "error", COLOR.STATUS_SUCCESS )
+      self._umountChain.run( onSuccess=self._onErrorUnmounted,
+                             onError=self._onErrorUnmounted )
+   
+   def _onErrorUnmounted( self ):
+      self.logEvent( "_onErrorUnmounted" )
+      self._cryptCloseHandler.run( onSuccess=self._onErrorCryptClosed,
+                                   onError=self._onErrorCryptClosed )
+   
+   def _onErrorCryptClosed( self ):
+      self.logEvent( "_onErrorCryptClosed" )
+      self._parentOnError()
    
    def __del__( self ):
       self._clean()
       del( self )
    
-   def _clean( self ): pass ## TODO panic
-   
-   def run( self ):
-      self.logStart( "run","step {s}".format( s=self.getStep() ) )
-      if not self.hasState( PasswordList.STATE_BUSY ):
-         
-         # step init
-         if self.hasStep( PasswordList.STEP_INIT ):
-            # do stuff
-            self.setStep( PasswordList.STEP_IDLE )
-         
-         # step idle
-         if self.hasStep( PasswordList.STEP_IDLE ): return
-         
-         # step load
-         if self.hasStep( PasswordList.STEP_LOAD_PASSWORDS ):
-            
-            if not self.hasState( PasswordList.STATE_CRYPT_OPENED ):
-               self._executeProc( self.cryptOpenProc.run )
-            
-            elif not self.hasState( PasswordList.STATE_MOUNTED ):
-               self._executeProc( self.mountCryptDirProc.run )
-            
-            else:
-               self._loadFromFile()
-               self.setStep( PasswordList.STEP_POST_LOADING )
-         
-         # step post load
-         if hasStep( PasswordList.STEP_POST_LOADING ):
-            
-            if self.hasState( PasswordList.STATE_MOUNTED ):
-               self._executeProc( self.unmountCryptDirProc.run )
-            
-            elif self.hasState( PasswordList.STATE_CRYPT_OPENED ):
-               self._executeProc( self.cryptCloseProc.run )
-            
-            else:
-               self.setStep( PasswordList.STEP_CLEANUP )
-         
-         # step save
-         if self.hasStep( PasswordList.STEP_SAVE_PASSWORDS ):
-            
-            if not self.hasState( PasswordList.STATE_CRYPT_OPENED ):
-               self._executeProc( self.cryptOpenProc.run )
-            
-            elif not self.hasState( PasswordList.STATE_MOUNTED ):
-               self._executeProc( self.mountCryptDirProc.run )
-            
-            else:
-               self._saveToFile()
-               self.setStep( PasswordList.STEP_POST_SAVING )
-         
-         # step post save
-         if hasStep( PasswordList.STEP_POST_SAVING ):
-            
-            if self.hasState( PasswordList.STATE_MOUNTED ):
-               self._executeProc( self.unmountCryptDirProc.run )
-            
-            elif self.hasState( PasswordList.STATE_CRYPT_OPENED ):
-               self._executeProc( self.cryptCloseProc.run )
-            
-            else:
-               self.setStep( PasswordList.STEP_CLEANUP )
-         
-         # step cleanup
-         if hasStep( PasswordList.STEP_CLEANUP ):
-            self._state = 0
-            self.setStep( PasswordList.STEP_INIT )
-      
-      self.logEnd()
-   
-   def _executeProc( self, func ):
-      self.logStart( "_executeProc" )
-      self._preProc( func )
-      func()
-      self.logEnd()
-   
-   def _preProc( self, func ):
-      self.logStart( "_preProc" )
-      self.setState( PasswordList.STATE_BUSY )
-      self.logEnd()
-   
-   def _postProc( self, process ):
-      self.logStart( "_postProc" )
-      self.delState( PasswordList.STATE_BUSY )
-      self.logEnd()
-   
-   def _procMountStatus( self, process ): # TODO unused, implement during init
-      self.logStart( "_procMountStatus" )
-      self._preProc( process )
-      if process.returnvalue == 0:
-         self.setState( PasswordList.STATE_MOUNTED )
-      else:
-         self.delState( PasswordList.STATE_MOUNTED )
-      self._postProc( process )
-      self.logEnd()
-   
-   def _procCryptDeviceStatus( self, process ): # TODO unused, implement during init
-      self.logStart( "_procCryptDeviceStatus" )
-      if process.returnvalue == 0:
-         self.setState( PasswordList.STATE_CRYPT_OPENED )
-      else:
-         self.delState( PasswordList.STATE_CRYPT_OPENED )
-      self._postProc( process )
-      self.logEnd()
-   
-   def _procCryptOpen( self, process ):
-      self.logStart( "_procCryptOpen" )
-      if process.returnvalue == 0:
-         self.setState( PasswordList.STATE_CRYPT_OPENED )
-      self._postProc( process )
-      self.logEnd()
-   
-   def _procCryptClose( self, process ):
-      self.logStart( "_procCryptClose" )
-      if process.returnvalue == 0:
-         self.delState( PasswordList.STATE_CRYPT_OPENED )
-      self._postProc( process )
-      self.logEnd()
-   
-   def _procMount( self, process ):
-      self.logStart( "_procMount" )
-      if process.returnvalue == 0:
-         self.setState( PasswordList.STATE_MOUNTED )
-      self._postProc( process )
-      self.logEnd()
-   
-   def _procUmount( self, process ):
-      self.logStart( "_procUmount" )
-      if process.returnvalue == 0:
-         self.delState( PasswordList.STATE_MOUNTED )
-      self._postProc( process )
-      self.logEnd()
-   
-   def _loadFromFile( self ):
-      self.logStart( "_loadFromFile" )
-      with open( self.filename, "rb" ) as file:
-         self._map = pickle.load( file )
-      self.logEnd()
-   
-   def _saveToFile( self ):
-      self.logStart( "_saveToFile" )
-      with open( self.filename, "wb" ) as file:
-         pickle.dump( self._map, file, pickle.HIGHEST_PROTOCOL )
-      self.logEnd()
+   def _clean( self ):
+      self._onError( None )

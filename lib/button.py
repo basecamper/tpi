@@ -32,7 +32,7 @@ class ButtonHandler( Log ):
       self.parentCallback = callback
       for v in ButtonMap.values():
          GPIO.setup(v,GPIO.IN, pull_up_down=GPIO.PUD_UP)    # Input with pull-up !
-         GPIO.add_event_detect(v, GPIO.RISING, callback=self.buttonDown, bouncetime=200)
+         GPIO.add_event_detect(v, GPIO.RISING, callback=self.buttonDown, bouncetime=100)
    
    def __del__(self):
       self.logStart( "__del__" )

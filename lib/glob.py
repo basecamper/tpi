@@ -1,5 +1,7 @@
 from enum import Enum
 
+SYSTEM_OK = 0
+
 class Global:
    DEBUG = False # disable curses screen / show Log.debug messages
    DEBUG_PRINT = False # keep printing debug messages to stderr
