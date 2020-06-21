@@ -26,6 +26,7 @@ class PasswordManagerElement( ScreenElement, Log ):
       self.addChild( self._pwTextElement )
       
       self._passwordList = PasswordList()
+      self._editingPassword = False
       
       self.setEnablePropagation( False )
    
@@ -37,8 +38,13 @@ class PasswordManagerElement( ScreenElement, Log ):
       self._editingPassword = False
       self.logEnd()
    
+   def onPwEditCancelled( self, password : str ):
+      self.logStart( "onPwEditCancelled","password {p}".format( p=password ) )
+      self._editingPassword = False
+      self.logEnd()
+   
    def onPasswordLoadSuccess( self ):
-      Log.pushStatus( "pw loaded", COLOR.STATUS_SUCCESS )
+      Log.pushStatus( "pws loaded", COLOR.STATUS_SUCCESS )
    
    def onPasswordLoadError( self ):
       Log.pushStatus( "ERR loading pw", COLOR.STATUS_ERROR )
@@ -47,11 +53,13 @@ class PasswordManagerElement( ScreenElement, Log ):
       self.logStart( "onOkButtonDown","button {b}".format( b=button ) )
       
       if self._passwordList.isLoaded():
-         pass
+         return
       else:
-         self._pwTextElement.startEditing( onEditingFinished=self.onPwEditFinished )
-         self._selectionElement.text, self._selectionElement.color = "main pw>", Color.DEFAULT
-         Log.pushStatus( "start edit", COLOR.STATUS_DEFAULT )
+         if not self._editingPassword:
+            self._editingPassword = True
+            self._pwTextElement.startEditing( onEditingFinished=self.onPwEditFinished, onEditingCancelled=self.onPwEditCancelled )
+            self._selectionElement.text, self._selectionElement.color = "main pw>", Color.DEFAULT
+            Log.pushStatus( "start edit", COLOR.STATUS_DEFAULT )
       
       self.logEnd()
    

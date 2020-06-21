@@ -14,7 +14,7 @@ PASSWORDS_FILE_NAME = _configReader.getData().get("passwords file name")
 
 MOUNT_STATUS_HANDLER =        ProcHandler( command=[ "mountpoint", DECRYPTED_MOUNT_DIR ] )
 CRYPT_CLOSE_HANDLER =         ProcHandler( command=[ "cryptsetup", "close", CRYPT_DEVICE ] )
-MOUNT_HANDLER =               ProcHandler( command=[ "mount", "{d}/{f}".format( d=CRYPT_DEVICE_PATH, f=CRYPT_DEVICE), DECRYPTED_MOUNT_DIR ] )
+MOUNT_HANDLER =               ProcHandler( command=[ "mount", "{d}{f}".format( d=CRYPT_DEVICE_PATH, f=CRYPT_DEVICE), DECRYPTED_MOUNT_DIR ] )
 UMOUNT_HANDLER =              ProcHandler( command=[ "umount", DECRYPTED_MOUNT_DIR ] )
 
 def _getOpenCryptDeviceHandler( password : str ):
@@ -106,8 +106,7 @@ class PasswordList( Log ):
       self._parentOnError = onError
       
       self._openChain = ProcHandlerChain(
-         procHandlerChain=[ _getOpenCryptDeviceHandler( password ),
-                            MOUNT_HANDLER ]
+         procHandlerChain=[ _getOpenCryptDeviceHandler( password ), MOUNT_HANDLER ]
          )
          
       self._openChain.run( onSuccess=self._onSuccessOpenLoad,
@@ -135,6 +134,7 @@ class PasswordList( Log ):
       Log.pushStatus( "loaded", COLOR.STATUS_SUCCESS )
       self._closeChain.run( onSuccess=self._onSuccessClose,
                               onError=self._onError )
+      self.logEvent( "_onSuccessOpenLoad","END" )
    
    def _onSuccessOpenSave( self ):
       self.logEvent( "_onSuccessOpenSave" )
@@ -143,26 +143,31 @@ class PasswordList( Log ):
       Log.pushStatus( "saved", COLOR.STATUS_SUCCESS )
       self._closeChain.run( onSuccess=self._onSuccessClose,
                               onError=self._onError )
+      self.logEvent( "_onSuccessOpenSave","END" )
    
    def _onSuccessClose( self ):
       self.logEvent( "_onSuccessClose" )
       Log.pushStatus( "closed", COLOR.STATUS_SUCCESS )
       self._parentOnSuccess()
+      self.logEvent( "_onSuccessClose","END" )
    
    def _onError( self ):
       self.logEvent( "_onError" )
-      Log.pushStatus( "error", COLOR.STATUS_SUCCESS )
+      Log.pushStatus( "error", COLOR.STATUS_ERROR )
       self._umountChain.run( onSuccess=self._onErrorUnmounted,
                              onError=self._onErrorUnmounted )
+      self.logEvent( "_onError","END" )
    
    def _onErrorUnmounted( self ):
       self.logEvent( "_onErrorUnmounted" )
       self._cryptCloseHandler.run( onSuccess=self._onErrorCryptClosed,
                                    onError=self._onErrorCryptClosed )
+      self.logEvent( "_onErrorUnmounted","END" )
    
    def _onErrorCryptClosed( self ):
       self.logEvent( "_onErrorCryptClosed" )
       self._parentOnError()
+      self.logEvent( "_onErrorCryptClosed","END" )
    
    def __del__( self ):
       self._clean()

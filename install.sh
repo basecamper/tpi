@@ -24,20 +24,29 @@ DD_BS="1M"
 
 run_error_cleanup()
 {
+   echo "-- cleanup --"
    [ -d "$MOUNT_DIRECTORY" ] && mountpoint "$MOUNT_DIRECTORY" >/dev/null\
                              && umount "$MOUNT_DIRECTORY"
    [ -e "/dev/mapper/$TO_WIPE_CRYPTFILE" ] && eval "cryptsetup close /dev/mapper/$TO_WIPE_CRYPTFILE"
    [ -e "/dev/mapper/$TO_FORMAT_CRYPTFILE" ] && eval "cryptsetup close /dev/mapper/$TO_FORMAT_CRYPTFILE"
    [ -e "$CRYPTED_FILE" ] && rm "$CRYPTED_FILE"
    [ -d "$MOUNT_DIRECTORY" ] && rmdir "$MOUNT_DIRECTORY"
+   return 0
 }
 
+KEYBOARD_CANCELLED=0
+
+function keyboard_interrupt()
+{
+   KEYBOARD_CANCELLED=1
+}
+
+# $1 cmd
+# $2 set to 0 to disable exiting script
+# $3 set to 1 to show OK no matter what
 run_cmd()
 {
-   # $1 cmd
-   # $2 set to 0 to disable exiting script
-   # $3 set to 1 to show OK no matter what
-   eval "$1" >/dev/null 2>&1 && echo "[  OK  ] $1" && return 0
+   [ "$KEYBOARD_CANCELLED" == "0" ] && eval "$1" >/dev/null 2>&1 && echo "[  OK  ] $1" && return 0
    [ "$3" != "1" ] && echo "[ ERROR ] $1" || echo "[  OK  ] $1"
    [ "$2" == "0" ] && return 1
    run_error_cleanup
@@ -45,21 +54,26 @@ run_cmd()
 }
 
 case "$1" in
-   "remove"|"r"|"uninstall"|"u")
+   "remove"|"r")
+      read -p "really undo everything, including $CRYPTED_FILE? (yes)" any
+      [ "$any" != "yes" ] && exit 0
       run_error_cleanup
-      exit 0
+      exit $?
       ;;
 esac
 
+trap keyboard_interrupt SIGINT
 
 if [ ! -d "$MOUNT_DIRECTORY" ]; then
-   echo "-- creating mount directory $MOUNT_DIRECTORY --"
+   echo "creating mount directory $MOUNT_DIRECTORY"
    run_cmd "mkdir $MOUNT_DIRECTORY"
    run_cmd "chmod 700 $MOUNT_DIRECTORY"
+else
+   echo "$MOUNT_DIRECTORY existing"
 fi
 
 if [ ! -e "$CRYPTED_FILE" ]; then
-   echo "-- creating $CRYPTED_FILE --"
+   echo "creating $CRYPTED_FILE"
    run_cmd "touch $CRYPTED_FILE"
    run_cmd "chmod 700 $CRYPTED_FILE"
    run_cmd "dd if=/dev/zero of=$CRYPTED_FILE bs=$DD_BS count=$DD_COUNT"
@@ -83,4 +97,6 @@ if [ ! -e "$CRYPTED_FILE" ]; then
    run_cmd "touch $MOUNT_DIRECTORY/$PASSWORDS_FILE"
    run_cmd "umount $MOUNT_DIRECTORY"
    run_cmd "cryptsetup close $TO_FORMAT_CRYPTFILE"
+else
+   echo "$CRYPTED_FILE existing"
 fi

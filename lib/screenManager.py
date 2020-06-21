@@ -45,9 +45,6 @@ class ScreenManager( Log ):
          
          self.screen.run()
          
-         if not Log.wasStatusChecked():
-            raise Exception("ScreenManager.run() latest status wasn't checked - make sure to Log.pop in a parent screenElement after all status are set")
-         
          if self.cursesWindow:
             self.printElements( self.screen, self.cursesWindow )
          else:

@@ -1,6 +1,6 @@
 import threading
 from typing import Callable
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, TimeoutExpired
 from datetime import datetime
 
 from lib.glob import SYSTEM_OK
@@ -9,23 +9,14 @@ from lib.log import Log
 class ProcHandlerChain( Log ):
    
    def __init__( self,
-                 procHandlerChain : list,
-                 onError : object = None,
-                 onSuccess : object = None ):
+                 procHandlerChain : list ):
       Log.__init__( self, "ProcHandlerChain" )
       self._procHandlerChain = procHandlerChain
       self._currentHandlerIndex = 0
       
-      self._parentOnError = [ onError ] if onError else []
-      self._parentOnSuccess = [ onSuccess ] if onSuccess else []
-      
       self._tempOnError = None
       self._tempOnSuccess = None
       self._hasProcessedOk = False
-      
-      for h in self._procHandlerChain:
-         h.addSuccessCallback( self.onSuccess )
-         h.addErrorCallback( self.onError )
    
    def hasProcessedOk( self ):
       return 
@@ -37,25 +28,25 @@ class ProcHandlerChain( Log ):
       self._parentOnError.append( func )
    
    def run( self, onSuccess : object = None, onError : object = None ):
+      self.logEvent( "run" )
       self._currentHandlerIndex = 0
       self._tempOnError = onError
       self._tempOnSuccess = onSuccess
       self._runCurrentHandler()
    
    def _getCurrentHandler( self ):
+      self.logEvent( "gettingCurrentHandler at idx {i}".format( i=self._currentHandlerIndex ) )
       return self._procHandlerChain[ self._currentHandlerIndex ]
    
    def _runCurrentHandler( self ):
-      self._getCurrentHandler().run()
+      self._getCurrentHandler().run( onSuccess=self.onSuccess, onError=self.onError )
    
    def onSuccess( self ):
+      handlerLen = len( self._procHandlerChain )
       self._currentHandlerIndex += 1
-      if self._currentHandlerIndex >= len( self._procHandlerChain ):
-         self.logEvent( "onSuccess","parentSuccess callbacks {p} self._tempOnSuccess {s}".format(
-            p=len( self._parentOnSuccess ), s=bool(self._tempOnSuccess)
-         ) )
-         for f in self._parentOnSuccess:
-            f()
+      self.logEvent( "onSuccess idx {i}/{m}".format( i=self._currentHandlerIndex , m=handlerLen ) )
+      if self._currentHandlerIndex >= handlerLen:
+         self.logEvent( "onSuccess","self._tempOnSuccess {s}".format( s=bool(self._tempOnSuccess) ) )
          if self._tempOnSuccess:
             self._tempOnSuccess()
          self._hasProcessedOk = True
@@ -63,11 +54,7 @@ class ProcHandlerChain( Log ):
          self._runCurrentHandler()
    
    def onError( self ):
-      self.logEvent( "onError","parentError callbacks {p} self._tempOnError {s}".format(
-         p=len( self._parentOnError ), s=bool(self._tempOnError)
-      ) )
-      for f in self._parentOnError:
-         f()
+      self.logEvent( "onError","self._tempOnError {s}".format( s=bool(self._tempOnSuccess) ) )
       if self._tempOnError:
          self._tempOnError()
       self._hasProcessedOk = False
@@ -92,6 +79,8 @@ class ProcHandler( Log ):
       self._fullCallback = [ fullCallback ] if fullCallback else []
       self._onError = [ onError ] if onError else []
       self._onSuccess = [ onSuccess ] if onSuccess else []
+      self._tempOnError = None
+      self._tempOnSuccess = None
       self._cooldown = cooldown
       self._timeout = timeout
       self._cooldownTimestamp = None
@@ -100,14 +89,19 @@ class ProcHandler( Log ):
       self._returnValue = None
       self._stdin = stdin.encode() if stdin else None
    
-   def run( self ):
-      self.logStart( "run" )
+   def run( self, onError : object = None, onSuccess : object = None ):
+      self.logStart( "run","onSuccess {s} onError {e}".format( e=bool(onError), s=bool(onSuccess)) )
+      
       
       if self._cooldown > 0:
          if self._evalSetTimestamp():
+            self._tempOnError = onError
+            self._tempOnSuccess = onSuccess
             self._runThread()
       else:
          self._runThread()
+         self._tempOnError = onError
+         self._tempOnSuccess = onSuccess
       
       self.logEnd()
    
@@ -131,14 +125,23 @@ class ProcHandler( Log ):
       return bool( self._returnValue != None and self._returnValue == SYSTEM_OK )
    
    def _onProcessFinished( self, stdout, stderr ):
-      self.logEvent( "_onProcessFinished" )
+      self.logEvent( "_onProcessFinished","temp onSuccess {s} onError {e}".format( e=bool(self._tempOnError), s=bool(self._tempOnSuccess) ) )
       
       if self.hasProcessedOk():
+         if self._tempOnSuccess:
+            self.logEvent( "_onProcessFinished","self._tempOnSuccess()" )
+            self._tempOnSuccess()
          for f in self._onSuccess:
             f()
-      elif self._onError:
+      else:
+         if self._tempOnError:
+            self.logEvent( "_onProcessFinished","self._tempOnError()" )
+            self._tempOnError()
          for f in self._onError:
             f()
+      
+      self._tempOnError = None
+      self._tempOnSuccess = None
       
       for f in self._fullCallback:
          f( self._proc )
