@@ -35,11 +35,16 @@ class _AccountMap( Log ):
    def isLoaded( self ):
       return bool( self._isLoaded )
    
+   def getGroups( self ):
+      return self._map.keys()
+   
+   def getAccounts( self, group : str ):
+      return self._map.get( group )
+   
    def loadFromFile( self, filename ):
       self.logStart( "_loadFromFile" )
       try:
          with open( filename, "rb" ) as file:
-            del( self._map )
             self._map = pickle.load( file )
       except Exception as e:
          return False
@@ -95,6 +100,12 @@ class PasswordList( Log ):
       
       self._parentOnSuccess = None
       self._parentOnError = None
+   
+   def getGroups( self ):
+      return self._accountMap.getGroups()
+   
+   def getAccounts( self, group : str ):
+      return self._accountMap.getAccounts( group )
    
    def isLoaded( self ):
       return self._accountMap.isLoaded()

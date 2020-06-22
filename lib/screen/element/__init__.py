@@ -61,11 +61,13 @@ class InteractiveElement( Log ):
       propagated = False
       
       if self.hasExclusivePropagation():
+         propagated = True
+         # even if button is not in map, count as propagated
+         # to make sure normal propagation isn't executed afterwards
          buttonProc = self.buttonDownMap.get( button )
          if buttonProc:
             self.log( message="button {b}".format( b=button ) )
             self.onButtonDown( button )
-            propagated = True
          else:
             self.log( message="button {b} not in buttonDownMap".format( b=button ) )
       
