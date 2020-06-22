@@ -84,10 +84,11 @@ class PasswordManagerElement( ScreenElement, Log ):
       self._passwordList = PasswordList()
       self._pwTextElement = PasswordEditElement()
       self._accountMenuElement = PasswordManagerMenuElement( passwordList=self._passwordList )
+      self._dataWrapperElement = ScreenElement( children=[ self._pwTextElement ] )
       
       self.addChild( self._titleElement )
       self.addChild( self._selectionElement )
-      self.addChild( self._pwTextElement )
+      self.addChild( self._dataWrapperElement )
       
       self._editingPassword = False
       
@@ -108,8 +109,9 @@ class PasswordManagerElement( ScreenElement, Log ):
    
    def onPasswordLoadSuccess( self ):
       Log.pushStatus( "pws loaded", COLOR.STATUS_SUCCESS )
-      self.emptyChildren()
-      self.addChild( self._accountMenuElement )
+      self._dataWrapperElement.emptyChildren()
+      self._dataWrapperElement.addChild( self._accountMenuElement )
+      self._selectionElement.text, self._selectionElement.color = "accounts>", Color.DEFAULT
       self._accountMenuElement.start()
    
    def onPasswordLoadError( self ):
