@@ -34,6 +34,7 @@ class PasswordManagerMenuElement( ScreenElement, Log ):
       self._passwordList = passwordList
       self._groupSelected = False
       self._groups = []
+      self._accounts = {}
       self._currentSelectedGroup : str = None
       self._currentSelectedAccount : str = None
       
@@ -55,7 +56,8 @@ class PasswordManagerMenuElement( ScreenElement, Log ):
       for g in self._passwordList.getGroups():
          self._groups.append( g )
          for a in self._passwordList.getAccounts( g ):
-            self._accounts.append( PasswordManagerAccount( data=a ) )
+            self._accounts[g] = []
+            self._accounts[g].append( PasswordManagerAccount( data=a ) )
    
    def end( self ):
       self.setExclusivePropagation( False )
