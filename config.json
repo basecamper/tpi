@@ -1,6 +1,6 @@
 {
 	"crypted file" : "./passwords.bin",
-	"crypt device" : "passwords",
+	"crypt device" : "pws",
 	"crypt device path" : "/dev/mapper/",
 	"decrypted mount dir" : "./mnt",
 	"passwords file name" : "passwords.json"

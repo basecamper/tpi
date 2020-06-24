@@ -40,7 +40,10 @@ class Control( Log ):
 
 if __name__ == "__main__":
    artc = len(sys.argv)
-   if "debug" in sys.argv:
+   if "deploy" in sys.argv:
+      Global.DEBUG_PRINT = True
+      # Global.MAIN_RUN_SECONDS = 180
+   elif "debug" in sys.argv:
       Global.DEBUG_PRINT = True
       Global.MAIN_RUN_SECONDS = 180
    

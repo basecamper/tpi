@@ -4,73 +4,12 @@ from lib.button import Button
 from lib.log import Log
 from lib.passwordList import PasswordList
 from lib.procHandler import ProcHandler
+from lib.keyStroker import KeyStroker
 from lib.screen.screenColor import Color
 from lib.screen.element import ScreenElement
 from lib.screen.element.passwordEditElement import PasswordEditElement
+from lib.screen.element.passwordManagerMenuElement import PasswordManagerMenuElement
 from lib.screen.textConst import TEXT, COLOR
-
-class PasswordManagerAccount( Log ):
-   def __init__( self, data : object ):
-      self._data = data
-   def getName( self ):
-      return self._data.get("name")
-   def getUser( self ):
-      return self._data.get("user")
-   def getMail( self ):
-      return self._data.get("email")
-   def getPassword( self ):
-      return self._data.get("password")
-   
-
-class PasswordManagerMenuElement( ScreenElement, Log ):
-   def __init__( self, passwordList : object ):
-      ScreenElement.__init__( self,
-                              buttonDownMap={ Button.LEFT : self.onCancelButtonDown,
-                                              Button.RIGHT : self.onOkButtonDown,
-                                              Button.UP : self.onPrevButtonDown,
-                                              Button.DOWN : self.onNextButtonDown } )
-      Log.__init__( self, className="PasswordManagerMenuElement" )
-      
-      self._passwordList = passwordList
-      self._groupSelected = False
-      self._groups = []
-      self._accounts = {}
-      self._currentSelectedGroup : str = None
-      self._currentSelectedAccount : str = None
-      
-      self._dataElement = ScreenElement()
-      self.addChild( self._dataElement )
-      
-      self.setEnablePropagation( False )
-      self.setButtonDownMapActive( False )
-   
-   def run( self ):
-      if not self._groupSelected:
-         self._dataElement.text = self._currentSelectedGroup or ""
-      else:
-         pass
-   
-   def start( self ):
-      self.setExclusivePropagation( True )
-      self.setButtonDownMapActive( True )
-      for g in self._passwordList.getGroups():
-         self._groups.append( g )
-         for a in self._passwordList.getAccounts( g ):
-            self._accounts[g] = []
-            self._accounts[g].append( PasswordManagerAccount( data=a ) )
-   
-   def end( self ):
-      self.setExclusivePropagation( False )
-      self.setButtonDownMapActive( False )
-   
-   def onOkButtonDown( self, button ):
-      pass
-   def onCancelButtonDown( self, button ):
-      pass
-   def onNextButtonDown( self, button ):
-      pass
-   def onPrevButtonDown( self, button ):
-      pass
 
 class PasswordManagerElement( ScreenElement, Log ):
    
@@ -84,8 +23,11 @@ class PasswordManagerElement( ScreenElement, Log ):
       self._selectionElement = ScreenElement( isEndingLine=True )
       
       self._passwordList = PasswordList()
+      self._keyStroker = KeyStroker()
+      
       self._pwTextElement = PasswordEditElement()
-      self._accountMenuElement = PasswordManagerMenuElement( passwordList=self._passwordList )
+      self._accountMenuElement = PasswordManagerMenuElement( passwordList=self._passwordList,
+                                                             keyStroker=self._keyStroker )
       self._dataWrapperElement = ScreenElement( children=[ self._pwTextElement ] )
       
       self.addChild( self._titleElement )

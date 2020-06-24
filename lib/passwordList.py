@@ -1,21 +1,24 @@
+from collections import OrderedDict
+
 from lib.log import Log
 from lib.button import Button
+from lib.tools import getNextDictionaryItem, getPrevDictionaryItem
 from lib.procHandler import ProcHandler, ProcHandlerChain
 from lib.configReader import ConfigReader
 from lib.screen.textConst import TEXT, COLOR
 
-_configReader = ConfigReader.getInstance()
+_configReaderData = ConfigReader.getInstance().getData()
 
-CRYPTED_FILE =        _configReader.getData().get("crypted file")
-CRYPT_DEVICE =        _configReader.getData().get("crypt device")
-CRYPT_DEVICE_PATH =   _configReader.getData().get("crypt device path")
-DECRYPTED_MOUNT_DIR = _configReader.getData().get("decrypted mount dir")
-PASSWORDS_FILE_NAME = _configReader.getData().get("passwords file name")   
+CRYPTED_FILE =        _configReaderData.get("crypted file")
+CRYPT_DEVICE =        _configReaderData.get("crypt device")
+CRYPT_DEVICE_PATH =   _configReaderData.get("crypt device path")
+DECRYPTED_MOUNT_DIR = _configReaderData.get("decrypted mount dir")
+PASSWORDS_FILE_NAME = _configReaderData.get("passwords file name")   
 
-MOUNT_STATUS_HANDLER =        ProcHandler( command=[ "mountpoint", DECRYPTED_MOUNT_DIR ] )
-CRYPT_CLOSE_HANDLER =         ProcHandler( command=[ "cryptsetup", "close", CRYPT_DEVICE ] )
-MOUNT_HANDLER =               ProcHandler( command=[ "mount", "{d}{f}".format( d=CRYPT_DEVICE_PATH, f=CRYPT_DEVICE), DECRYPTED_MOUNT_DIR ] )
-UMOUNT_HANDLER =              ProcHandler( command=[ "umount", DECRYPTED_MOUNT_DIR ] )
+MOUNT_STATUS_HANDLER = ProcHandler( command=[ "mountpoint", DECRYPTED_MOUNT_DIR ] )
+CRYPT_CLOSE_HANDLER =  ProcHandler( command=[ "cryptsetup", "close", CRYPT_DEVICE ] )
+MOUNT_HANDLER =        ProcHandler( command=[ "mount", "{d}{f}".format( d=CRYPT_DEVICE_PATH, f=CRYPT_DEVICE), DECRYPTED_MOUNT_DIR ] )
+UMOUNT_HANDLER =       ProcHandler( command=[ "umount", DECRYPTED_MOUNT_DIR ] )
 
 def _getOpenCryptDeviceHandler( password : str ):
    return ProcHandler( command=[ "cryptsetup", "open", CRYPTED_FILE, CRYPT_DEVICE, "-d", "-" ],
@@ -29,26 +32,21 @@ class _PasswordGenerator():
 class _AccountMap( Log ):
    def __init__( self ):
       Log.__init__( self, "_AccountMap" )
-      self._map = {}
-      self._isLoaded = False
+      self._map = None
+   
+   def getMap( self ):
+      return self._map
    
    def isLoaded( self ):
-      return bool( self._isLoaded )
-   
-   def getGroups( self ):
-      return self._map.keys()
-   
-   def getAccounts( self, group : str ):
-      return self._map.get( group )
+      return self._map != None
    
    def loadFromFile( self, filename ):
       self.logStart( "_loadFromFile" )
       try:
          with open( filename, "rb" ) as file:
-            self._map = pickle.load( file )
+            self._map = OrderedDict( pickle.load( file ) )
       except Exception as e:
          return False
-      self._isLoaded = True
       return True
       self.logEnd()
    
@@ -100,6 +98,72 @@ class PasswordList( Log ):
       
       self._parentOnSuccess = None
       self._parentOnError = None
+   
+   def getNextGroup( self, group : str ):
+      if self._accountMap.getMap() == None:
+         return None
+      
+      groups = self._accountMap.getMap().keys()
+      if len( groups ) > 0:
+         if group == None:
+            return groups[0]
+         return getNextDictionaryItem( self._accountMap.getMap(), group )
+      return None
+   
+   def getPrevGroup( self, group : str ):
+      if self._accountMap.getMap() == None:
+         return None
+      
+      groups = self._accountMap.getMap().keys()
+      if len( groups ) > 0:
+         if group == None:
+            return groups[len( groups )-1]
+         return getPrevDictionaryItem( self._accountMap.getMap(), group )
+      return None
+   
+   def getNextAccount( self, group : str, account : str ):
+      if group == None or self._accountMap.getMap() == None:
+         return None
+      
+      accounts = self._accountMap.getMap().get( group ).keys()
+      if len( accounts ) > 0:
+         if account == None:
+            return accounts[0]
+         return getPrevDictionaryItem( self._accountMap.getMap().get( group ), account )
+      return None
+   
+   def getPrevAccount( self, group : str, account : str ):
+      if group == None or self._accountMap.getMap() == None:
+         return None
+      
+      accounts = self._accountMap.getMap().get( group ).keys()
+      if len( accounts ) > 0:
+         if account == None:
+            return accounts[len( accounts )-1]
+         return getPrevDictionaryItem( self._accountMap.getMap().get( group ), account )
+      return None
+   
+   def getNextAccountDataKey( self, group : str, account : str, key : str ):
+      if group == None or account == None or self._accountMap.getMap() == None:
+         return None
+      
+      keys = self._accountMap.getMap().get( group ).get( account ).keys()
+      if len( keys ) > 0:
+         if key == None:
+            return keys[0]
+         return getPrevDictionaryItem( self._accountMap.getMap().get( group ).get( account ), key )
+      return None
+   
+   def getPrevAccountDataKey( self, group : str, account : str, key : str ):
+      if group == None or account == None or self._accountMap.getMap() == None:
+         return None
+      
+      keys = self._accountMap.getMap().get( group ).get( account ).keys()
+      if len( keys ) > 0:
+         if key == None:
+            return keys[len( keys )-1]
+         return getPrevDictionaryItem( self._accountMap.getMap().get( group ).get( account ), key )
+      return None
    
    def getGroups( self ):
       return self._accountMap.getGroups()
