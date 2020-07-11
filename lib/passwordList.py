@@ -46,9 +46,10 @@ class _AccountMap( Log ):
          with open( filename, "rb" ) as file:
             self._map = OrderedDict( pickle.load( file ) )
       except Exception as e:
+         self.logEnd()
          return False
-      return True
       self.logEnd()
+      return True
    
    def saveToFile( self, filename ):
       self.logStart( "_saveToFile" )
