@@ -5,6 +5,7 @@ SYSTEM_OK = 0
 class Global:
    DEBUG = False # disable curses screen / show Log.debug messages
    DEBUG_PRINT = False # keep printing debug messages to stderr
+   DISPLAY_SPLASH = False # auto-show splash image after startup
    MAIN_RUN_SECONDS = 0.2 # run() interval
    CONFIG_FILE = "./config.json"
 

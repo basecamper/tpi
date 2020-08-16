@@ -6,6 +6,8 @@ from lib.tools import getNextDictionaryItem, getPrevDictionaryItem
 from lib.procHandler import ProcHandler, ProcHandlerChain
 from lib.configReader import ConfigReader
 from lib.screen.textConst import TEXT, COLOR
+# import pickle
+import json
 
 _configReaderData = ConfigReader.getInstance().getData()
 
@@ -38,49 +40,34 @@ class _AccountMap( Log ):
       return self._map
    
    def isLoaded( self ):
+      self.logEvent( "isLoaded {s}".format( s=( self._map != None ) ) )
       return self._map != None
    
    def loadFromFile( self, filename ):
       self.logStart( "_loadFromFile" )
       try:
          with open( filename, "rb" ) as file:
-            self._map = OrderedDict( pickle.load( file ) )
+            # self._map = OrderedDict( pickle.load( file ) )
+            
+            self._map = json.load( file )
       except Exception as e:
+         self.log("Error loading {err}".format( err=e ) )
          self.logEnd()
          return False
       self.logEnd()
       return True
    
-   def saveToFile( self, filename ):
-      self.logStart( "_saveToFile" )
-      try:
-         with open( filename, "wb" ) as file:
-            pickle.dump( self._map, file, pickle.HIGHEST_PROTOCOL )
-      except Exception as e:
-         self.logError("writing")
-         return False
-      self.logEnd()
-      return True
-   
-   def evalAddEntry( self,
-                     group : str,
-                     entryName : str,
-                     userName : str,
-                     email : str = None,
-                     password : str = None ):
-      existingGroup = self._map.get( group )
-      
-      if existingGroup:
-         if existingGroup.get( entryName ):
-            return False
-      else:
-         existingGroup = {}
-         self._map[ group ] = existingGroup
-      
-      existingGroup[ entryName ] = { "user" : userName,
-                                    "email" : email or "",
-                                 "password" : password or "" }
-      return True
+   # TODO
+   #def saveToFile( self, filename ):
+   #   self.logStart( "_saveToFile" )
+   #   try:
+   #      with open( filename, "wb" ) as file:
+   #         pickle.dump( self._map, file, pickle.HIGHEST_PROTOCOL )
+   #   except Exception as e:
+   #      self.logError("writing")
+   #      return False
+   #   self.logEnd()
+   #   return True
 
 class PasswordList( Log ):
    
@@ -90,6 +77,8 @@ class PasswordList( Log ):
       self._accountMap = _AccountMap()
       self._openChain = None
       
+      self._evalMountedHandler = ProcHandler( command=[ "mountpoint", DECRYPTED_MOUNT_DIR ] )
+      
       self._closeChain = ProcHandlerChain( procHandlerChain=[ UMOUNT_HANDLER,
                                                               CRYPT_CLOSE_HANDLER ] )
       
@@ -97,96 +86,31 @@ class PasswordList( Log ):
       
       self._cryptCloseHandler = ProcHandlerChain( procHandlerChain=[ CRYPT_CLOSE_HANDLER ]  )
       
+      self._evalMountedHandler.run( onSuccess=self._onInitialEvalMountedSuccess )
+      
       self._parentOnSuccess = None
       self._parentOnError = None
    
-   def getNextGroup( self, group : str ):
-      if self._accountMap.getMap() == None:
-         return None
-      
-      groups = self._accountMap.getMap().keys()
-      if len( groups ) > 0:
-         if group == None:
-            return groups[0]
-         return getNextDictionaryItem( self._accountMap.getMap(), group )
-      return None
-   
-   def getPrevGroup( self, group : str ):
-      if self._accountMap.getMap() == None:
-         return None
-      
-      groups = self._accountMap.getMap().keys()
-      if len( groups ) > 0:
-         if group == None:
-            return groups[len( groups )-1]
-         return getPrevDictionaryItem( self._accountMap.getMap(), group )
-      return None
-   
-   def getNextAccount( self, group : str, account : str ):
-      if group == None or self._accountMap.getMap() == None:
-         return None
-      
-      accounts = self._accountMap.getMap().get( group ).keys()
-      if len( accounts ) > 0:
-         if account == None:
-            return accounts[0]
-         return getPrevDictionaryItem( self._accountMap.getMap().get( group ), account )
-      return None
-   
-   def getPrevAccount( self, group : str, account : str ):
-      if group == None or self._accountMap.getMap() == None:
-         return None
-      
-      accounts = self._accountMap.getMap().get( group ).keys()
-      if len( accounts ) > 0:
-         if account == None:
-            return accounts[len( accounts )-1]
-         return getPrevDictionaryItem( self._accountMap.getMap().get( group ), account )
-      return None
-   
-   def getNextAccountDataKey( self, group : str, account : str, key : str ):
-      if group == None or account == None or self._accountMap.getMap() == None:
-         return None
-      
-      keys = self._accountMap.getMap().get( group ).get( account ).keys()
-      if len( keys ) > 0:
-         if key == None:
-            return keys[0]
-         return getPrevDictionaryItem( self._accountMap.getMap().get( group ).get( account ), key )
-      return None
-   
-   def getPrevAccountDataKey( self, group : str, account : str, key : str ):
-      if group == None or account == None or self._accountMap.getMap() == None:
-         return None
-      
-      keys = self._accountMap.getMap().get( group ).get( account ).keys()
-      if len( keys ) > 0:
-         if key == None:
-            return keys[len( keys )-1]
-         return getPrevDictionaryItem( self._accountMap.getMap().get( group ).get( account ), key )
-      return None
-   
-   def getGroups( self ):
-      return self._accountMap.getGroups()
-   
-   def getAccounts( self, group : str ):
-      return self._accountMap.getAccounts( group )
+   def getAccountMap( self ):
+      return self._accountMap.getMap()
    
    def isLoaded( self ):
       return self._accountMap.isLoaded()
    
    def loadPasswords( self, password : str, onSuccess : object, onError : object ):
       self.logStart( "loadPasswords","password {p}" )
-      Log.pushStatus( "opening", COLOR.STATUS_SUCCESS )
-      self._parentOnSuccess = onSuccess
-      self._parentOnError = onError
       
-      self._openChain = ProcHandlerChain(
-         procHandlerChain=[ _getOpenCryptDeviceHandler( password ), MOUNT_HANDLER ]
-         )
+      if not self.isLoaded():
+         Log.pushStatus( "opening", COLOR.STATUS_SUCCESS )
+         self._parentOnSuccess = onSuccess
+         self._parentOnError = onError
          
-      self._openChain.run( onSuccess=self._onSuccessOpenLoad,
-                           onError=self._onError )
+         self._openChain = ProcHandlerChain(
+            procHandlerChain=[ _getOpenCryptDeviceHandler( password ), MOUNT_HANDLER ]
+            )
+            
+         self._openChain.run( onSuccess=self._onSuccessOpenLoad,
+                              onError=self._onError )
       self.logEnd()
    
    def savePasswords( self, password : str, onSuccess : object, onError : object ):
@@ -202,6 +126,11 @@ class PasswordList( Log ):
          
       self._openChain.run( onSuccess=self._onSuccessOpenSave, onError=self._onError )
       self.logEnd()
+   
+   def _onInitialEvalMountedSuccess( self ):
+      self.logEvent( "passwords already mounted, loading.." )
+      self._accountMap.loadFromFile( "{d}/{f}".format( d=DECRYPTED_MOUNT_DIR, f=PASSWORDS_FILE_NAME ) )
+      
    
    def _onSuccessOpenLoad( self ):
       self.logEvent( "_onSuccessOpenLoad" )

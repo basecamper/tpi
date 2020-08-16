@@ -1,7 +1,7 @@
 from enum import Enum
 
 from lib.osPollCommand import GetGPUTempCommand, GetGPUMemUsageCommand, GetCPUTempCommand
-from lib.glob import GlobalRuntime
+from lib.glob import GlobalRuntime, Global
 from lib.log import Log
 from lib.button import Button
 from lib.procHandler import ProcHandler
@@ -46,7 +46,8 @@ class Overview( ScreenElement, Log ):
       self.splashProcHandler = ProcHandler( command=CMD_DISPLAY_SPLASH )
       
       self.splashDisplayed = False
-      self.enableSplash()
+      if Global.DISPLAY_SPLASH:
+         self.enableSplash()
    
    def run( self ):
       self.logStart("run")

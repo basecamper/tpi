@@ -12,8 +12,8 @@ extract_config_value()
    echo "$CONFIG" | grep "$1" | sed -e "s/.*: \"//g" | sed -e "s/[\",]//g"
 }
 
-TO_WIPE_CRYPTFILE="to_wipe_cryptfile"
-TO_FORMAT_CRYPTFILE="to_format_cryptfile"
+TO_WIPE_CRYPTFILE="to_wipe"
+TO_FORMAT_CRYPTFILE="to_format"
 
 CRYPTED_FILE=$( extract_config_value "crypted file" )
 PASSWORDS_FILE=$( extract_config_value "passwords file name" )

@@ -37,7 +37,14 @@ class PasswordManagerElement( ScreenElement, Log ):
       self._editingPassword = False
       
       self.setEnablePropagation( False )
-   
+      
+   def passwordsLoaded( self ):
+      Log.pushStatus( "pws loaded", COLOR.STATUS_SUCCESS )
+      self._dataWrapperElement.emptyChildren()
+      self._dataWrapperElement.addChild( self._accountMenuElement )
+      self._selectionElement.text, self._selectionElement.color = "accounts>", Color.DEFAULT
+      self._accountMenuElement.start()
+      
    def onPwEditFinished( self, password : str ):
       self.logStart( "onPwEditFinished","password {p}".format( p=password ) )
       self._passwordList.loadPasswords( password=password,
@@ -52,11 +59,7 @@ class PasswordManagerElement( ScreenElement, Log ):
       self.logEnd()
    
    def onPasswordLoadSuccess( self ):
-      Log.pushStatus( "pws loaded", COLOR.STATUS_SUCCESS )
-      self._dataWrapperElement.emptyChildren()
-      self._dataWrapperElement.addChild( self._accountMenuElement )
-      self._selectionElement.text, self._selectionElement.color = "accounts>", Color.DEFAULT
-      self._accountMenuElement.start()
+      self.passwordsLoaded()
    
    def onPasswordLoadError( self ):
       Log.pushStatus( "ERR loading pw", COLOR.STATUS_ERROR )
@@ -65,7 +68,7 @@ class PasswordManagerElement( ScreenElement, Log ):
       self.logStart( "onOkButtonDown","button {b}".format( b=button ) )
       
       if self._passwordList.isLoaded():
-         self._accountMenuElement.start()
+         self.passwordsLoaded()
       else:
          if not self._editingPassword:
             self._editingPassword = True

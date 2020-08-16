@@ -22,12 +22,9 @@ class PasswordManagerMenuElement( ScreenElement, Log ):
       
       self._passwordList = passwordList
       self._keyStroker = keyStroker
-      self._groupSelected = False
-      self._accountSelected = False
-      self._dataKeySelected = False
-      self._currentSelectedGroup : str = None
-      self._currentSelectedAccount : str = None
-      self._currentSelectedAccountDataKey : str = None
+      self._accountMap = None
+      self._currentGroup = None
+      self._currentAccount = None
       
       self._dataElement = ScreenElement()
       self.addChild( self._dataElement )
@@ -37,12 +34,7 @@ class PasswordManagerMenuElement( ScreenElement, Log ):
    
    def run( self ):
       self.logStart("run")
-      if not self._groupSelected:
-         self._dataElement.text = self._currentSelectedGroup or ""
-      elif not self._accountSelected:
-         self._dataElement.text = self._currentSelectedAccount or ""
-      else:
-         self._dataElement.text = self._currentSelectedAccountDataKey or ""
+      self._dataElement.text = self._currentGroup.getKey()
       
       self.logEnd()
    
@@ -50,114 +42,92 @@ class PasswordManagerMenuElement( ScreenElement, Log ):
       self.logStart("start")
       self.setExclusivePropagation( True )
       self.setButtonDownMapActive( True )
+      
+      self._accountMap = self._passwordList.getAccountMap()
+      self.log( str( self._accountMap ) )
+      for a in self._accountMap:
+          self.log( str( a ) )
+      self._currentGroup = iter( self._accountMap )
+      self._setNextGroup()
+      
       self.logEnd()
    
    def end( self ):
       self.logStart("end")
-      self._currentSelectedAccountDataKey = None
-      self.setAccountSelected( False )
-      self.setGroupSelected( False )
-      self.setDataKeySelected( False )
+      
+      self._currentMapKey = None
+      
       self.setExclusivePropagation( False )
       self.setButtonDownMapActive( False )
+      
       self.logEnd()
    
-   def setDataKeySelected( self, state : bool ):
-      self.logStart("setGroupSelected","state {s}".format( s=state ))
-      change = ( not ( self._dataKeySelected == state )
-                 and ( not state or ( self._currentSelectedAccountDataKey != None ) ) )
-      if change:
-         self._dataKeySelected = state
-         self._currentSelectedAccountDataKey = None if not state else self._currentSelectedAccountDataKey
-      self.logEnd("return changed {c}".format( c=change ))
-      return change
+   def _setNextGroup( self ):
+      try:
+         self._currentGroup = next( self._currentGroup )
+      except StopIteration:
+         pass
    
-   def setGroupSelected( self, state : bool ):
-      self.logStart("setGroupSelected","state {s}".format( s=state ))
-      change = ( not ( self._groupSelected == state )
-                 and ( not state or ( self._currentSelectedGroup != None ) ) )
-      if change:
-         self._groupSelected = state
-         self._currentSelectedGroup = None if not state else self._currentSelectedGroup
-      self.logEnd("return changed {c}".format( c=change ))
-      return change
-      
-   def setAccountSelected( self, state : bool ):
-      self.logStart("setAccountSelected","state {s}".format( s=state ))
-      change = ( not ( self._accountSelected == state )
-                 and ( not state or ( self._currentSelectedAccount != None ) ) )
-      if change:
-         self._accountSelected = state
-         self._currentSelectedAccount = None if not state else self._currentSelectedAccount
-      self.logEnd("return changed {c}".format( c=change ))
-      return change
+   def setPrevGroup( self ):
+      prevGroup, newGroup = None, None
+      try:
+         with iter( self._accountMap ) as i:
+            while True:
+               prevGroup = newGroup
+               newGroup = next( i )
+               if newGroup == self._currentGroup:
+                  break
+      except StopIteration:
+         pass
+      self._currentGroup = prevGroup or self._currentGroup
+   
+   def setPrevAccount( self ):
+      prevAccount, newAccount = None, None
+      try:
+         with iter( self._accountMap.get( self._currentAccount ) ) as i:
+            while True:
+               prevAccount = newAccount
+               newAccount = next( i )
+               if newAccount == self._currentAccount:
+                  break
+      except StopIteration:
+         pass
+      self._currentAccount = prevAccount or self._currentAccount
    
    def onOkButtonDown( self, button ):
       self.logEvent("onOkButtonDown")
-      if self._groupSelected and self._accountSelected:
-         self.log( "sending password", logMethod=False )
-         self._keyStroker.sendCharacters(
-            self._passwordList.getAccountDataValue(
-               self._currentSelectedGroup,
-               self._currentSelectedAccount,
-               "password" )
-         )
-         self.end()
+      pass
    
    def onNextButtonDown( self, button ):
       self.logEvent("onNextButtonDown")
-      if not self._groupSelected:
-         if self._currentSelectedGroup != None:
-            self.log( "selecting group", logMethod=False )
-            self.setGroupSelected( True )
-      elif not self._accountSelected:
-         if self._currentSelectedAccount != None:
-            self.log( "selecting account", logMethod=False )
-            self.setAccountSelected( True )
-      elif not self._dataKeySelected:
-         if self._currentSelectedAccountDataKey != None:
-            self.log( "selecting account", logMethod=False )
-            self.setDataKeySelected( True )
+      try:
+         if self._currentAccount != None:
+            self._currentAccount == None
+         else:
+            self.end()
+      except StopIteration:
+         pass
    
    def onPrevButtonDown( self, button ):
-      self.logEvent("onCancelButtonDown")
-      if self.setAccountSelected( False ):
-         self.log( "selected account set to false", logMethod=False )
-      elif self.setGroupSelected( False ):
-         self.log( "selected group set to false", logMethod=False )
-      elif self.setDataKeySelected( False ):
-         self.log( "selected dataKey set to false", logMethod=False )
+      self.logEvent("onPrevButtonDown")
+      if self._currentAccount != None:
+         self._currentAccount == None
       else:
          self.end()
    
    def onDecreaseButtonDown( self, button ):
       self.logEvent("onDecreaseButtonDown")
-      if not self._groupSelected:
-         self.log( "setting next group", logMethod=False )
-         self._currentSelectedGroup = self._passwordList.getNextGroup( self._currentSelectedGroup )
-      elif not self._accountSelected:
-         self.log( "setting next account", logMethod=False )
-         self._currentSelectedAccount = self._passwordList.getNextAccount(
-            self._currentSelectedGroup,
-            self._currentSelectedAccount )
+      if self._currentAccount != None:
+         self.setPrevAccount()
       else:
-         self._currentSelectedAccountDataKey = self._passwordList.getNextAccountDataKey( 
-            self._currentSelectedAccountDataKey,
-            self._currentSelectedGroup,
-            self._currentSelectedAccount )
-   
+         self.setPrevGroup()
+      
    def onIncreaseButtonDown( self, button ):
       self.logEvent("onIncreaseButtonDown")
-      if self._groupSelected:
-         self.log( "setting prev group", logMethod=False )
-         self._currentSelectedGroup = self._passwordList.getPrevGroup( self._currentSelectedGroup )
-      elif self._accountSelected:
-         self.log( "setting prev account", logMethod=False )
-         self._currentSelectedAccount = self._passwordList.getPrevAccount(
-            self._currentSelectedGroup,
-            self._currentSelectedAccount )
-      else:
-         self._currentSelectedAccountDataKey = self._passwordList.getPrevAccountDataKey(
-            self._currentSelectedAccountDataKey,
-            self._currentSelectedGroup,
-            self._currentSelectedAccount )
+      try:
+         if self._currentAccount != None:
+            self._currentAccount = next( self._currentAccount )
+         else:
+            self._currentGroup = next( self._currentGroup )
+      except StopIteration:
+         pass
