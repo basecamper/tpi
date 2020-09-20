@@ -56,6 +56,9 @@ class Log( object ):
       if printMessage:
          Log.debug( message="END   {m}".format( m=self.formatMsg( method, message ) ) )
    
+   def logException( self, exception : Exception, message : str = "" ):
+      Log.debug( message="ERROR {emsg}".format( emsg=self.formatMsg( message="{m} EXCEPTION: {e}".format( m=message, e=exception ) ) ) )
+   
    @staticmethod
    def wasStatusChecked():
       return bool( Log._wasStatusChecked )
