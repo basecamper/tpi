@@ -121,21 +121,23 @@ class ProcHandler( Log ):
       return bool( self._thread and self._thread.isAlive() )
    
    def hasProcessedOk( self ):
-      self.logEvent( "hasProcessedOk","{r}".format( r=bool( self._returnValue != None and self._returnValue == SYSTEM_OK ) ) )
+      self.logEvent( "hasProcessedOk","{r}".format(
+         r=bool( self._returnValue != None and self._returnValue == SYSTEM_OK ) ) )
       return bool( self._returnValue != None and self._returnValue == SYSTEM_OK )
    
    def _onProcessFinished( self, stdout, stderr ):
-      self.logEvent( "_onProcessFinished","temp onSuccess {s} onError {e}".format( e=bool(self._tempOnError), s=bool(self._tempOnSuccess) ) )
+      self.logEvent( "_onProcessFinished","has functions: tempOnSuccess: {s}, tempOnError: {e}".format(
+         e=bool(self._tempOnError), s=bool(self._tempOnSuccess) ) )
       
       if self.hasProcessedOk():
          if self._tempOnSuccess:
-            self.logEvent( "_onProcessFinished","self._tempOnSuccess()" )
+            self.logEvent( "_onProcessFinished","running self._tempOnSuccess()" )
             self._tempOnSuccess()
          for f in self._onSuccess:
             f()
       else:
          if self._tempOnError:
-            self.logEvent( "_onProcessFinished","self._tempOnError()" )
+            self.logEvent( "_onProcessFinished","running self._tempOnError()" )
             self._tempOnError()
          for f in self._onError:
             f()
