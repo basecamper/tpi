@@ -174,6 +174,8 @@ class ProcHandler( Log ):
    
    def _runInThread( self, func, args ):
       self.logEvent( method="_runInThread", message="starting, args {a} input {i}".format( a=args, i=self._stdin ) )
+      stdout, stderr = None, None
+      
       if self._stdin != None:
          self._proc = Popen( args, stdout=PIPE, stdin=PIPE, close_fds=True )
       else:

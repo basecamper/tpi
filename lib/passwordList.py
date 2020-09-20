@@ -179,4 +179,4 @@ class PasswordList( Log ):
       del( self )
    
    def _clean( self ):
-      self._onError( None )
+      self._onError()
