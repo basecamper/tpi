@@ -1,6 +1,7 @@
 from lib.log import Log
 from lib.button import Button
 from lib.screen.screenColor import Color
+from lib.screen.element.shitTalkerElement import ShitTalkerElement
 from lib.screen.element.passwordManagerElement import PasswordManagerElement
 from lib.screen.element.simpleOsCommandElement import SimpleOsCommandElement
 from lib.screen.element import ScreenElement
@@ -8,6 +9,7 @@ from lib.screen.element import ScreenElement
 class MainMenu( ScreenElement, Log ):
    
    menuItems = [ PasswordManagerElement(),
+                 ShitTalkerElement(),
                  ScreenElement( children=[ SimpleOsCommandElement( text="reboot", button=Button.RIGHT, command=["reboot"] ),
                                 ScreenElement( isEndingLine=True ),ScreenElement( isEndingLine=True )
                  ]),
