@@ -8,6 +8,10 @@ fi
 COMMAND="python3 ./tpi.py"
 
 case "$1" in
+	mount)
+		cryptsetup open passwords.bin pws
+		mount /dev/mapper/pws ./mnt
+		;;
 	*)
 		eval  "$COMMAND debug" >/dev/tty1 >&1
 		;;
