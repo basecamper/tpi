@@ -64,7 +64,6 @@ class ShitTalkerElement( ScreenElement, Log ):
    def start( self ):
       self.logStart("start")
       self.setExclusivePropagation( True )
-      self.setButtonDownMapActive( True )
       self.loadFromFile( SHITTALKER_FILE )
       self._started = True
       self._confirmed = False
@@ -74,7 +73,6 @@ class ShitTalkerElement( ScreenElement, Log ):
       self.logStart("end")
       self._started = False
       self.setExclusivePropagation( False )
-      self.setButtonDownMapActive( False )
       
       self.logEnd()
    
