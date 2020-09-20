@@ -23,14 +23,13 @@ class ShitTalkerElement( ScreenElement, Log ):
       Log.__init__( self, className="ShitTalkerElement" )
       
       self._titleElement = ScreenElement( isEndingLine=True, text="[shitTalker]" )
-      self._dataElement1 = ScreenElement( isEndingLine=True )
+      self._dataElement = ScreenElement( isEndingLine=True )
       self._keyStroker = KeyStroker()
-      self._dataElement2 = ScreenElement()
       self._dict = None
       self._started = False
       
       self.addChild( self._titleElement )
-      self.addChild( self._dataElement1 )
+      self.addChild( self._dataElement )
       
       self.setEnablePropagation( False )
    
@@ -50,14 +49,13 @@ class ShitTalkerElement( ScreenElement, Log ):
    def run( self ):
       self.logStart("run")
       if self._started:
-         sendprompt = ""
-         if self._dict.hasStringValue():
-            sendprompt = ">>>" if self._confirmed else ">"
+         sendprompt = ">" if self._dict.hasStringValue() else ""
+         sendprefix = ">>>" if self._confirmed else ""
+      
          
-         self._dataElement1.text = "{k}{s}".format( k=self._dict.getKey(), s=sendprompt )
-         self._dataElement2.text = self._dict.getSubDictKey()
+         self._dataElement.text = "{p}{k}{s}".format( p=sendprefix, k=self._dict.getKey(), s=sendprompt )
       else:
-         self._dataElement2.text = ">"
+         self._dataElement.text = ""
       
       self.logEnd()
    
