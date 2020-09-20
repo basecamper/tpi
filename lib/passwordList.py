@@ -6,6 +6,7 @@ from lib.tools import getNextDictionaryItem, getPrevDictionaryItem
 from lib.procHandler import ProcHandler, ProcHandlerChain
 from lib.configReader import ConfigReader
 from lib.screen.textConst import TEXT, COLOR
+from lib.dictNavigator import DictNavigator
 # import pickle
 import json
 
@@ -24,32 +25,33 @@ UMOUNT_HANDLER =       ProcHandler( command=[ "umount", DECRYPTED_MOUNT_DIR ] )
 
 def _getOpenCryptDeviceHandler( password : str ):
    return ProcHandler( command=[ "cryptsetup", "open", CRYPTED_FILE, CRYPT_DEVICE, "-d", "-" ],
-                       stdin=password )
+                       stdin=password,
+                       timeout=10 )
 
 class _PasswordGenerator():
    @staticmethod
    def get( self ):
       return "test"
 
-class _AccountMap( Log ):
+class _AccountDictLoader( Log ):
    def __init__( self ):
-      Log.__init__( self, "_AccountMap" )
-      self._map = None
+      Log.__init__( self, "_AccountDictLoader" )
+      self._dict = None
    
-   def getMap( self ):
-      return self._map
+   def getDict( self ):
+      return self._dict
    
    def isLoaded( self ):
-      self.logEvent( "isLoaded {s}".format( s=( self._map != None ) ) )
-      return self._map != None
+      self.logEvent( "isLoaded {s}".format( s=( self._dict != None ) ) )
+      return self._dict != None
    
    def loadFromFile( self, filename ):
       self.logStart( "_loadFromFile" )
       try:
          with open( filename, "rb" ) as file:
-            # self._map = OrderedDict( pickle.load( file ) )
-            
-            self._map = json.load( file )
+            self._dict = DictNavigator( json.load( file ) )
+            self.log( "datatype {t}".format( t=type( self._dict )))
+            # self._dict = OrderedDict( pickle.load( file ) )
       except Exception as e:
          self.log("Error loading {err}".format( err=e ) )
          self.logEnd()
@@ -62,7 +64,7 @@ class _AccountMap( Log ):
    #   self.logStart( "_saveToFile" )
    #   try:
    #      with open( filename, "wb" ) as file:
-   #         pickle.dump( self._map, file, pickle.HIGHEST_PROTOCOL )
+   #         pickle.dump( self._dict, file, pickle.HIGHEST_PROTOCOL )
    #   except Exception as e:
    #      self.logError("writing")
    #      return False
@@ -74,7 +76,7 @@ class PasswordList( Log ):
    def __init__( self ):
       Log.__init__( self, "PasswordList" )
       
-      self._accountMap = _AccountMap()
+      self._accountDictLoader = _AccountDictLoader()
       self._openChain = None
       
       self._evalMountedHandler = ProcHandler( command=[ "mountpoint", DECRYPTED_MOUNT_DIR ] )
@@ -91,11 +93,11 @@ class PasswordList( Log ):
       self._parentOnSuccess = None
       self._parentOnError = None
    
-   def getAccountMap( self ):
-      return self._accountMap.getMap()
+   def getAccountDict( self ):
+      return self._accountDictLoader.getDict()
    
    def isLoaded( self ):
-      return self._accountMap.isLoaded()
+      return self._accountDictLoader.isLoaded()
    
    def loadPasswords( self, password : str, onSuccess : object, onError : object ):
       self.logStart( "loadPasswords","password {p}" )
@@ -129,13 +131,13 @@ class PasswordList( Log ):
    
    def _onInitialEvalMountedSuccess( self ):
       self.logEvent( "passwords already mounted, loading.." )
-      self._accountMap.loadFromFile( "{d}/{f}".format( d=DECRYPTED_MOUNT_DIR, f=PASSWORDS_FILE_NAME ) )
+      self._accountDictLoader.loadFromFile( "{d}/{f}".format( d=DECRYPTED_MOUNT_DIR, f=PASSWORDS_FILE_NAME ) )
       
    
    def _onSuccessOpenLoad( self ):
       self.logEvent( "_onSuccessOpenLoad" )
       Log.pushStatus( "opened", COLOR.STATUS_SUCCESS )
-      self._accountMap.loadFromFile( "{d}/{f}".format( d=DECRYPTED_MOUNT_DIR, f=PASSWORDS_FILE_NAME ) )
+      self._accountDictLoader.loadFromFile( "{d}/{f}".format( d=DECRYPTED_MOUNT_DIR, f=PASSWORDS_FILE_NAME ) )
       Log.pushStatus( "loaded", COLOR.STATUS_SUCCESS )
       self._closeChain.run( onSuccess=self._onSuccessClose,
                               onError=self._onError )
@@ -144,7 +146,7 @@ class PasswordList( Log ):
    def _onSuccessOpenSave( self ):
       self.logEvent( "_onSuccessOpenSave" )
       Log.pushStatus( "opened", COLOR.STATUS_SUCCESS )
-      self._accountMap.saveToFile( "{d}/{f}".format( d=DECRYPTED_MOUNT_DIR, f=PASSWORDS_FILE_NAME ) )
+      self._accountDictLoader.saveToFile( "{d}/{f}".format( d=DECRYPTED_MOUNT_DIR, f=PASSWORDS_FILE_NAME ) )
       Log.pushStatus( "saved", COLOR.STATUS_SUCCESS )
       self._closeChain.run( onSuccess=self._onSuccessClose,
                               onError=self._onError )

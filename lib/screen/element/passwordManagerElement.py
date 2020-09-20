@@ -20,7 +20,6 @@ class PasswordManagerElement( ScreenElement, Log ):
       Log.__init__( self, className="PasswordManagerElement" )
       
       self._titleElement = ScreenElement( isEndingLine=True, text="[pwman]" )
-      self._selectionElement = ScreenElement( isEndingLine=True )
       
       self._passwordList = PasswordList()
       self._keyStroker = KeyStroker()
@@ -31,7 +30,6 @@ class PasswordManagerElement( ScreenElement, Log ):
       self._dataWrapperElement = ScreenElement( children=[ self._pwTextElement ] )
       
       self.addChild( self._titleElement )
-      self.addChild( self._selectionElement )
       self.addChild( self._dataWrapperElement )
       
       self._editingPassword = False
@@ -42,7 +40,6 @@ class PasswordManagerElement( ScreenElement, Log ):
       Log.pushStatus( "pws loaded", COLOR.STATUS_SUCCESS )
       self._dataWrapperElement.emptyChildren()
       self._dataWrapperElement.addChild( self._accountMenuElement )
-      self._selectionElement.text, self._selectionElement.color = "accounts>", Color.DEFAULT
       self._accountMenuElement.start()
       
    def onPwEditFinished( self, password : str ):
@@ -73,7 +70,6 @@ class PasswordManagerElement( ScreenElement, Log ):
          if not self._editingPassword:
             self._editingPassword = True
             self._pwTextElement.startEditing( onEditingFinished=self.onPwEditFinished, onEditingCancelled=self.onPwEditCancelled )
-            self._selectionElement.text, self._selectionElement.color = "main pw>", Color.DEFAULT
             Log.pushStatus( "start edit", COLOR.STATUS_DEFAULT )
       
       self.logEnd()

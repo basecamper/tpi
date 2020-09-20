@@ -27,10 +27,15 @@ class PasswordEditElement( ScreenElement, Log ):
       
       self._parentOnEditingFinished = None
       self._parentOnEditingCancelled = None
+      
+      self._titleElement = ScreenElement( isEndingLine=True )
+      self._titleElement.text, self._titleElement.color = "mainPW>", Color.DEFAULT
+      
+      
       self._pwTextPreElement = ScreenElement()
       self._pwTextCharElement = ScreenElement( color=Color.BLACKWHITE )
       self._pwTextPostElement = ScreenElement()
-      self.addChildren( [ self._pwTextPreElement, self._pwTextCharElement, self._pwTextPostElement ] )
+      self.addChildren( [ self._titleElement, self._pwTextPreElement, self._pwTextCharElement, self._pwTextPostElement ] )
       
       self._pwText = ""
       self._pwTextCurrentChar = "a"
