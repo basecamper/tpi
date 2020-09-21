@@ -40,7 +40,7 @@ class SimpleOsCommandElement( ScreenElement, Log ):
             self._procHandler.run()
    
    def _onSuccess( self ):
-      self._dataElement.text, self._dataElement.color = TEXT.OK, COLOR.OK
+      self._dataElement.color = COLOR.OK
    
    def _onError( self ):
-      self._dataElement.text, self._dataElement.color = TEXT.OK, COLOR.OK
+      self._dataElement.color = COLOR.ERROR
