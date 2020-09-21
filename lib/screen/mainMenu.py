@@ -1,6 +1,7 @@
 from lib.log import Log
 from lib.button import Button
 from lib.screen.screenColor import Color
+from lib.screen.element.setRuntimeConfigElement import SetRuntimeConfigElement
 from lib.screen.element.shitTalkerElement import ShitTalkerElement
 from lib.screen.element.passwordManagerElement import PasswordManagerElement
 from lib.screen.element.simpleOsCommandElement import SimpleOsCommandElement
@@ -10,6 +11,7 @@ class MainMenu( ScreenElement, Log ):
    
    menuItems = [ PasswordManagerElement(),
                  ShitTalkerElement(),
+                 SetRuntimeConfigElement(),
                  ScreenElement( children=[ SimpleOsCommandElement( text="wpa_supplicant", button=Button.RIGHT, command=["systemctl","start","wpa_supplicant"] ),
                                 ScreenElement( isEndingLine=True ),ScreenElement( isEndingLine=True )
                  ]),

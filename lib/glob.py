@@ -9,13 +9,36 @@ class Global:
    MAIN_RUN_SECONDS = 0.2 # run() interval
    CONFIG_FILE = "./config.json"
 
+class RUNTIME_CONFIG_KEY:
+   keymap = "keymap"
+
 class GlobalRuntime:
+   
+   # gets set from SetRuntimeConfigElement
+   _configDict = {}
+   
    # perform run() / refresh curses screen each interval
    # e.g. set to false to not print anything while the splash image is displayed
    refreshScreen = True
    
    # registered in screenHandler to trigger a run()
    _asyncScreenRefreshCallback = None
+   
+   @staticmethod
+   def setRuntimeConfig( key : str, value : str ):
+      if len( key ) > 0:
+         GlobalRuntime._configDict[ key ] = value
+   
+   @staticmethod
+   def hasRuntimeConfig( key : str ):
+      return bool( key in GlobalRuntime._configDict )
+   
+   @staticmethod
+   def getRuntimeConfig( key : str ):
+      if GlobalRuntime.hasRuntimeConfig( key ):
+         return GlobalRuntime._configDict[ key ]
+      else:
+         return None
    
    @staticmethod
    def setAsyncScreenRefreshCallback( func : object ):
