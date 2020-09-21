@@ -29,8 +29,6 @@ class PasswordEditElement( ScreenElement, Log ):
       self._parentOnEditingCancelled = None
       
       self._titleElement = ScreenElement( isEndingLine=True )
-      self._titleElement.text, self._titleElement.color = "mainPW>", Color.DEFAULT
-      
       
       self._pwTextPreElement = ScreenElement()
       self._pwTextCharElement = ScreenElement( color=Color.BLACKWHITE )
