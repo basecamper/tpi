@@ -10,6 +10,9 @@ class MainMenu( ScreenElement, Log ):
    
    menuItems = [ PasswordManagerElement(),
                  ShitTalkerElement(),
+                 ScreenElement( children=[ SimpleOsCommandElement( text="wpa_supplicant", button=Button.RIGHT, command=["systemctl","start","wpa_supplicant"] ),
+                                ScreenElement( isEndingLine=True ),ScreenElement( isEndingLine=True )
+                 ]),
                  ScreenElement( children=[ SimpleOsCommandElement( text="reboot", button=Button.RIGHT, command=["reboot"] ),
                                 ScreenElement( isEndingLine=True ),ScreenElement( isEndingLine=True )
                  ]),
