@@ -40,13 +40,12 @@ class KeyStroker( Log ):
       KeyMapTools.genArrayLoop( self._keyMap_en, NULL_CHAR, 4, "abcdefghijklmnopqrstuvwxyz" )
       KeyMapTools.genArrayLoop( self._keyMap_en, SHIFT_KEY, 4, "ABCDEFGHIJKLMNOPQRSTUVWXYZ" )
       KeyMapTools.genArrayLoop( self._keyMap_en, NULL_CHAR, 30, "1234567890" )
-      KeyMapTools.genArrayLoop( self._keyMap_en, SHIFT_KEY, 30, "!@#$%`&*()" )
+      KeyMapTools.genArrayLoop( self._keyMap_en, SHIFT_KEY, 30, "!@#$%^&*()" )
       KeyMapTools.genKey      ( self._keyMap_en, NULL_CHAR, 40, "\n" )
       KeyMapTools.genKey      ( self._keyMap_en, NULL_CHAR, 43, "\t" )
       KeyMapTools.genKey      ( self._keyMap_en, NULL_CHAR, 44, " " )
       KeyMapTools.genArrayLoop( self._keyMap_en, NULL_CHAR, 45, "-=[]\\" )
-      KeyMapTools.genArrayLoop( self._keyMap_en, NULL_CHAR, 51, ";'" )
-      KeyMapTools.genArrayLoop( self._keyMap_en, NULL_CHAR, 54, ",./" )
+      KeyMapTools.genArrayLoop( self._keyMap_en, NULL_CHAR, 51, ";'`,./" )
       KeyMapTools.genArrayLoop( self._keyMap_en, SHIFT_KEY, 45, "_+{}|" )
       KeyMapTools.genArrayLoop( self._keyMap_en, SHIFT_KEY, 51, ":\"~<>?" )
       KeyMapTools.genKey      ( self._keyMap_en, NULL_CHAR, 57, "caps" )
@@ -105,11 +104,11 @@ class KeyStroker( Log ):
    def _parseText( self, text : str, layout : str = KEYSETTING.de ):
       self.logStart( "_parseText", "parsing {c} characters".format( c=len(text) ) )
       li = []
-      kmap = self._layouts[ layout ];
+      kmap = self._layouts[ layout ]
       lastChar = None
       for c in text:
          if c in kmap:
-            if lastChar != None and lastChar == c:
+            if ( lastChar != None and lastChar == c ) or c == "\n":
                li.append( self._genReleaseKeys() )
             li.append( kmap[ c ] )
             lastChar = c
