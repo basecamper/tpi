@@ -20,7 +20,8 @@ class DictNavigatorElement( ScreenElement, Log ):
       Log.__init__( self, className="DictNavigatorElement" )
       
       self._titleElement = ScreenElement( isEndingLine=True, text=title )
-      self._dataElement = ScreenElement( isEndingLine=True )
+      self._upperDataElement = ScreenElement( isEndingLine=True )
+      self._lowerDataElement = ScreenElement( isEndingLine=True )
       
       self._onSelected = onSelected
       self._dict = raiseNotInstanceOf( dictNavigator, DictNavigator )
@@ -28,7 +29,7 @@ class DictNavigatorElement( ScreenElement, Log ):
       self._started = False
       self._selectionConfirmed = False
       
-      self.addChildren( [ self._titleElement, self._dataElement ] )
+      self.addChildren( [ self._titleElement, self._upperDataElement, self._lowerDataElement ] )
       self.setEnablePropagation( False )
    
    def getDictNavigator( self ):
@@ -36,13 +37,20 @@ class DictNavigatorElement( ScreenElement, Log ):
    
    def run( self ):
       self.logStart()
+      uppertext = EMPTY_STRING
+      lowertext = EMPTY_STRING
       if self._started:
          sendprompt = ">" if self._dict.hasStringValue() else EMPTY_STRING
          sendprefix = ">>>" if self._selectionConfirmed else EMPTY_STRING
          
-         self._dataElement.text = "{p}{k}{s}".format( p=sendprefix, k=self._dict.getKey(), s=sendprompt )
-      else:
-         self._dataElement.text = EMPTY_STRING
+         if self._dict.hasOpenedSubDict():
+            uppertext = self._dict.getSubDictKey() if self._dict.hasOpenedSubDict() else EMPTY_STRING
+            lowertext = "{p}{k}{s}".format( p=sendprefix, k=self._dict.getKey(), s=sendprompt )
+         else:
+            uppertext = "{p}{k}{s}".format( p=sendprefix, k=self._dict.getKey(), s=sendprompt )
+         
+      self._upperDataElement.text = uppertext
+      self._lowerDataElement.text = lowertext
       
       self.logEnd()
    
