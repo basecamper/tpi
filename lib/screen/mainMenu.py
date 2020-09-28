@@ -119,8 +119,8 @@ class MainMenu( ScreenElement, Log ):
    def _onSysCmdError( self ):
       d = MainMenu._sysCmdDict
       self.log()
-      Log.pushStatus( "{s}{k}".format(
-                  s="{sd}: ".format( sd=self._sysCmdTempDictName ) if self._sysCmdTempDictName else EMPTY_STRING,
+      Log.pushStatus( "{k}{s}".format(
+                  s=" {sd}".format( sd=self._sysCmdTempDictName ) if self._sysCmdTempDictName else EMPTY_STRING,
                   k=self._sysCmdTempKeyName ),
             COLOR.STATUS_ERROR )
       self._sysCmdTempDictName = None
@@ -131,8 +131,8 @@ class MainMenu( ScreenElement, Log ):
    def _onSysCmdSuccess( self ):
       d = MainMenu._sysCmdDict
       self.log()
-      Log.pushStatus( "{s}{k}".format(
-                  s="{sd}: ".format( sd=self._sysCmdTempDictName ) if self._sysCmdTempDictName else EMPTY_STRING,
+      Log.pushStatus( "{k}{s}".format(
+                  s=" {sd}".format( sd=self._sysCmdTempDictName ) if self._sysCmdTempDictName else EMPTY_STRING,
                   k=self._sysCmdTempKeyName ),
             COLOR.STATUS_SUCCESS )
       self._sysCmdTempDictName = None
