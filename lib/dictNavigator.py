@@ -35,7 +35,7 @@ class DictNavigator( Log ):
    
    def getValue( self ):
       self.logStart()
-      v = v=self._getValueList()[ self._currentKeyIndex ]
+      v = self._getValueList()[ self._currentKeyIndex ]
       if isinstance( v, str ):
          self.logEnd("returning string with len: {l}".format( l=len( v ) ) )
       else:
@@ -72,6 +72,7 @@ class DictNavigator( Log ):
       if not self.hasStringValue():
          self.log( "opening {k}".format( k=self.getKey() ) )
          self._selectedDictPath.append( self.getKey() )
+         self._currentKeyIndex = 0
       self.logEnd()
       return self
    
