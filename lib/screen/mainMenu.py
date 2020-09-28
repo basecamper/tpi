@@ -19,6 +19,8 @@ KEY_WPA_SUPPLICANT="wpa_supplicant"
 
 VALUE_POWEROFF="poweroff"
 VALUE_REBOOT="reboot"
+VALUE_IFCONFIG_WLAN0_UP="up"
+VALUE_IFCONFIG_WLAN0_DOWN="down"
 VALUE_WPA_SUPPLICANT_START="start"
 VALUE_WPA_SUPPLICANT_STOP="stop"
 VALUE_WPA_SUPPLICANT_STATUS="status"
@@ -28,7 +30,9 @@ VALUE_DHCPCD_STATUS="status"
 
 procMap = {
    VALUE_POWEROFF : ["poweroff"],
-   VALUE_REBOOT : ["poweroff"],
+   VALUE_REBOOT : ["reboot"],
+   VALUE_IFCONFIG_WLAN0_UP : ["ifconfig","wlan0","up"],
+   VALUE_IFCONFIG_WLAN0_DOWN : ["ifconfig","wlan0","down"],
    VALUE_WPA_SUPPLICANT_START : ["systemctl","start","wpa_supplicant@wlan0.service"],
    VALUE_WPA_SUPPLICANT_STOP : ["systemctl","stop","wpa_supplicant@wlan0.service"],
    VALUE_WPA_SUPPLICANT_STATUS : ["systemctl","status","wpa_supplicant@wlan0.service"],
@@ -47,6 +51,8 @@ class MainMenu( ScreenElement, Log ):
    _sysCmdDict = DictNavigator(
          {  "poweroff" : VALUE_POWEROFF,
             "reboot" : VALUE_REBOOT,
+            "wlan0" : { "up" : VALUE_IFCONFIG_WLAN0_UP,
+                        "down" : VALUE_IFCONFIG_WLAN0_DOWN },
             "dhcpcd" : { "start" : VALUE_WPA_SUPPLICANT_START,
                          "stop" : VALUE_WPA_SUPPLICANT_STOP,
                          "status" : VALUE_WPA_SUPPLICANT_STATUS },
