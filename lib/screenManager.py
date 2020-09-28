@@ -64,16 +64,17 @@ class ScreenManager( Log ):
             o=element.getClassName(), l=lineCounter, ch=charCounter, t=element.text, co=str( element.color ) ) )
       
       if element.text:
+         text = element.text[0:15]
          if win:
             try:
-               win.addString( lineCounter, charCounter, element.text, element.color )
+               win.addString( lineCounter, charCounter, text, element.color )
             except Exception as e:
                # screen might be full
                self.logError("Exception caught '{ex}'".format( ex=e ))
                if lineCounter >= 8:
                   self.log("a too high linecount (8) was reached!")
                raise( e )
-         charCounter += len(element.text)
+         charCounter += len(text)
       
       for child in element.getChildren():
          lineCounter, charCounter = self.recursivePrintElements( child, lineCounter, charCounter, win )
