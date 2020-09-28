@@ -100,30 +100,6 @@ class MainMenu( ScreenElement, Log ):
                   onSelected=self._onSysCmdSelected
                ))
       
-      self.menuItems.append(
-            ScreenElement(
-                  children=[
-                        SimpleOsCommandElement( text="wpa_supplicant", button=Button.RIGHT, command=["systemctl","start","wpa_supplicant"] ),
-                        ScreenElement( isEndingLine=True ),
-                        ScreenElement( isEndingLine=True )
-                     ]))
-      
-      self.menuItems.append(
-            ScreenElement(
-                  children=[
-                        SimpleOsCommandElement( text="reboot", button=Button.RIGHT, command=["reboot"] ),
-                        ScreenElement( isEndingLine=True ),
-                        ScreenElement( isEndingLine=True )
-                     ]))
-      
-      self.menuItems.append(
-            ScreenElement(
-                  children=[
-                        SimpleOsCommandElement( text="poweroff", button=Button.RIGHT, command=["poweroff"] ),
-                        ScreenElement( isEndingLine=True ),
-                        ScreenElement( isEndingLine=True )
-                     ]))
-      
       self._activeElementWrapper = ScreenElement( isEndingLine=True )
       self.addChildren( [ ScreenElement( text="---------------", isEndingLine=True, color=COLOR.BORDER ),
                           self._activeElementWrapper ] )
