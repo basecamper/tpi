@@ -15,7 +15,7 @@ class CharPool( Log ):
       return self._poolStringLength
    
    def evalSetIndex( self, index : int = None, delta : int = None, setIndex : bool = True ):
-      self.logStart("evalSetIndex","index: {i} delta: {d} setIndex: {s}".format( i=index, d=delta, s=setIndex ))
+      self.logStart("index: {i} delta: {d} setIndex: {s}".format( i=index, d=delta, s=setIndex ))
       newIndex = index
       
       if newIndex == None:
@@ -37,7 +37,7 @@ class CharPool( Log ):
       return self._poolString[ newIndex ]
    
    def get( self, index : int = None, setIndex : bool = False ):
-      self.logStart("get","index: {i} setIndex: {s}".format( i=index, s=setIndex ))
+      self.logStart("index: {i} setIndex: {s}".format( i=index, s=setIndex ))
       
       char = self.evalSetIndex( index=( index or self.getIndex() ), setIndex=setIndex )
       
@@ -45,7 +45,7 @@ class CharPool( Log ):
       return char
    
    def start( self, setIndex : bool = True ):
-      self.logStart("start","setIndex: {s}".format( s=setIndex ))
+      self.logStart("setIndex: {s}".format( s=setIndex ))
       
       char = self.evalSetIndex( index=0, setIndex=setIndex )
       
@@ -53,7 +53,7 @@ class CharPool( Log ):
       return char
    
    def end( self, setIndex : bool = True ):
-      self.logStart("end","setIndex: {s}".format( s=setIndex ))
+      self.logStart("setIndex: {s}".format( s=setIndex ))
       
       char = self.evalSetIndex( delta=( self.getCharCount() - 1 ), setIndex=setIndex )
       
@@ -61,7 +61,7 @@ class CharPool( Log ):
       return char
    
    def next( self, setIndex : bool = True ):
-      self.logStart("next","setIndex: {s}".format( s=setIndex ))
+      self.logStart("setIndex: {s}".format( s=setIndex ))
       
       char = self.evalSetIndex( delta=1, setIndex=setIndex )
       
@@ -69,7 +69,7 @@ class CharPool( Log ):
       return char
    
    def prev( self, setIndex : bool = True ):
-      self.logStart("prev","setIndex: {s}".format( s=setIndex ))
+      self.logStart("setIndex: {s}".format( s=setIndex ))
       
       char = self.evalSetIndex( delta=-1, setIndex=setIndex )
       
@@ -114,7 +114,7 @@ class CharPoolManager( Log ):
          self.toggleCharacters()
    
    def getCharacter( self ):
-      self.logStart("getCharacter")
+      self.logStart()
       c = self._activePool.get()
       
       if self._isCapsActive:
@@ -126,13 +126,13 @@ class CharPoolManager( Log ):
       return c
    
    def next( self ):
-      self.logStart("next")
+      self.logStart()
       newChar = self._activePool.next()
       self.logEnd("returning: {c}".format( c=newChar ))
       return newChar
    
    def prev( self ):
-      self.logStart("prev")
+      self.logStart()
       newChar = self._activePool.prev()
       self.logEnd("returning: {c}".format( c=newChar ))
       return newChar

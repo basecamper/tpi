@@ -3,11 +3,10 @@ import time
 
 EMPTY_STRING = ""
 
+
 def getMsTimestamp():
    return int(round(time.time() * 1000))
 
-
-   
 def getNextDictionaryItem( dict : object, key : str ):
    try:
       found = False
@@ -32,20 +31,11 @@ def getPrevDictionaryItem( dict : object, key : str ):
       pass
    return None
 
-class BitState():
-   
-   @staticmethod
-   def hasBit( binValue, binCompare ):
-      return binValue & binCompare != 0
-   
-   @staticmethod
-   def setBit( binValue, binCompare ):
-      if BitState.hasBit( binValue, binCompare ):
-         return binValue
-      return binValue | binCompare
-   
-   @staticmethod
-   def delBit( binValue, binCompare ):
-      if not BitState.hasBit( binValue, binCompare ):
-         return binValue
-      return binValue ^ binCompare
+def raiseNotInstanceOf( obj, cl ):
+   if isinstance( obj, cl ):
+      return obj
+   e = TypeError( "{o} is not of class {c}".format(
+      o=obj,
+      c=cl
+   ) )
+   raise e

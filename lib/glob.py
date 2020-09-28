@@ -8,6 +8,7 @@ class Global:
    DISPLAY_SPLASH = False # auto-show splash image after startup
    MAIN_RUN_SECONDS = 0.2 # run() interval
    CONFIG_FILE = "./config.json"
+   LOG_REDUCE_INDENT = 0
 
 class RUNTIME_CONFIG_KEY:
    keymap = "keymap"

@@ -1,100 +1,110 @@
-from lib.button import Button
 from lib.log import Log
-from lib.screen.screenColor import Color
+from lib.button import Button
 from lib.screen.element import ScreenElement
-from lib.screen.textConst import TEXT, COLOR
 from lib.dictNavigator import DictNavigator
-from lib.glob import GlobalRuntime, RUNTIME_CONFIG_KEY
-from lib.keyStroker import KEYSETTING
+from lib.tools import EMPTY_STRING, raiseNotInstanceOf
 
-class SetRuntimeConfigElement( ScreenElement, Log ):
+class DictNavigatorElement( ScreenElement, Log ):
    
-   def __init__( self ):
+   def __init__( self,
+                 dictNavigator,
+                 title : str,
+                 onSelected ):
+      
       ScreenElement.__init__( self,
                               buttonDownMap={ Button.PRESS : self.onOkButtonDown,
                                               Button.LEFT : self.onPrevButtonDown,
                                               Button.RIGHT : self.onNextButtonDown,
                                               Button.DOWN : self.onIncreaseButtonDown,
                                               Button.UP : self.onDecreaseButtonDown } )
-      Log.__init__( self, className="SetRuntimeConfigElement" )
+      Log.__init__( self, className="DictNavigatorElement" )
       
-      self._titleElement = ScreenElement( isEndingLine=True, text="[cfg]" )
+      self._titleElement = ScreenElement( isEndingLine=True, text=title )
       self._dataElement = ScreenElement( isEndingLine=True )
       
-      self._dict = DictNavigator( { RUNTIME_CONFIG_KEY.keymap : { "de" : KEYSETTING.de,
-                                                                  "en" : KEYSETTING.en } } )
+      self._onSelected = onSelected
+      self._dict = raiseNotInstanceOf( dictNavigator, DictNavigator )
+      
       self._started = False
+      self._selectionConfirmed = False
       
-      self.addChild( self._titleElement )
-      self.addChild( self._dataElement )
-      
+      self.addChildren( [ self._titleElement, self._dataElement ] )
       self.setEnablePropagation( False )
    
+   def getDictNavigator( self ):
+      return self._dict
+   
    def run( self ):
-      self.logStart("run")
+      self.logStart()
       if self._started:
-         sendprompt = ">" if self._dict.hasStringValue() else ""
-         sendprefix = ">>>" if self._confirmed else ""
-      
+         sendprompt = ">" if self._dict.hasStringValue() else EMPTY_STRING
+         sendprefix = ">>>" if self._selectionConfirmed else EMPTY_STRING
          
          self._dataElement.text = "{p}{k}{s}".format( p=sendprefix, k=self._dict.getKey(), s=sendprompt )
       else:
-         self._dataElement.text = ""
+         self._dataElement.text = EMPTY_STRING
       
       self.logEnd()
    
    def start( self ):
-      self.logStart("start")
+      self.logStart()
       self.setExclusivePropagation( True )
       self._started = True
-      self._confirmed = False
+      self._selectionConfirmed = False
       self.logEnd()
    
    def end( self ):
-      self.logStart("end")
+      self.logStart()
+      self._dict.reset()
       self._started = False
       self.setExclusivePropagation( False )
       self.logEnd()
    
    def onOkButtonDown( self, button ):
-      self.logEvent("onOkButtonDown")
+      self.logStart()
       if self._started:
          pass
       self.end()
+      self.logEnd()
    
    def onNextButtonDown( self, button ):
-      self.logEvent("onNextButtonDown")
+      self.logStart()
       if not self._started:
          self.start()
       else:
          if self._dict.hasStringValue():
-            if not self._confirmed:
-               self._confirmed = True
+            if not self._selectionConfirmed:
+               self._selectionConfirmed = True
             else:
-               self._confirmed = False
-               Log.pushStatus( "{k} set".format( k=self._dict.getKey() ), COLOR.STATUS_DEFAULT )
-               GlobalRuntime.setRuntimeConfig( self._dict.getSubDictKey(), self._dict.getValue() )
+               self._onSelected()
+               self.end()
          else:
             self._dict.openSubDict()
+      self.logEnd()
    
    def onPrevButtonDown( self, button ):
-      self.logEvent("onPrevButtonDown")
-      if self._confirmed:
-         self._confirmed = False
+      self.logStart()
+      if self._selectionConfirmed:
+         self._selectionConfirmed = False
       else:
          if self._started:
-            self._confirmed = False
+            self._selectionConfirmed = False
             if self._dict.hasOpenedSubDict():
                self._dict.closeSubDict()
             else:
                self.end()
+      self.logEnd()
          
    def onDecreaseButtonDown( self, button ):
-      self.logEvent("onDecreaseButtonDown")
-      self._confirmed = False
+      self.logStart()
+      self._selectionConfirmed = False
       self._dict.changeKeyIndex( -1 )
+      self.logEnd()
       
    def onIncreaseButtonDown( self, button ):
-      self.logEvent("onIncreaseButtonDown")
-      self._confirmed = False
+      self.logStart()
+      self._selectionConfirmed = False
       self._dict.changeKeyIndex( 1 )
+      self.logEnd()
+   
+   

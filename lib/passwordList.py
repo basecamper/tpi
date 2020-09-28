@@ -42,11 +42,11 @@ class _AccountDictLoader( Log ):
       return self._dict
    
    def isLoaded( self ):
-      self.logEvent( "isLoaded {s}".format( s=( self._dict != None ) ) )
+      self.log( "isLoaded {s}".format( s=( self._dict != None ) ) )
       return self._dict != None
    
    def loadFromFile( self, filename ):
-      self.logStart( "_loadFromFile" )
+      self.logStart()
       try:
          with open( filename, "rb" ) as file:
             self._dict = DictNavigator( json.load( file ) )
@@ -100,7 +100,7 @@ class PasswordList( Log ):
       return self._accountDictLoader.isLoaded()
    
    def loadPasswords( self, password : str, onSuccess : object, onError : object ):
-      self.logStart( "loadPasswords","password {p}" )
+      self.logStart()
       
       if not self.isLoaded():
          Log.pushStatus( "opening", COLOR.STATUS_SUCCESS )
@@ -116,7 +116,7 @@ class PasswordList( Log ):
       self.logEnd()
    
    def savePasswords( self, password : str, onSuccess : object, onError : object ):
-      self.logStart( "savePasswords","password {p}" )
+      self.logStart()
       Log.pushStatus( "opening", COLOR.STATUS_SUCCESS )
       self._parentOnSuccess = onSuccess
       self._parentOnError = onError
@@ -130,51 +130,51 @@ class PasswordList( Log ):
       self.logEnd()
    
    def _onInitialEvalMountedSuccess( self ):
-      self.logEvent( "passwords already mounted, loading.." )
+      self.log( "passwords already mounted, loading.." )
       self._accountDictLoader.loadFromFile( "{d}/{f}".format( d=DECRYPTED_MOUNT_DIR, f=PASSWORDS_FILE_NAME ) )
       
    
    def _onSuccessOpenLoad( self ):
-      self.logEvent( "_onSuccessOpenLoad" )
+      self.logStart()
       Log.pushStatus( "opened", COLOR.STATUS_SUCCESS )
       self._accountDictLoader.loadFromFile( "{d}/{f}".format( d=DECRYPTED_MOUNT_DIR, f=PASSWORDS_FILE_NAME ) )
       Log.pushStatus( "loaded", COLOR.STATUS_SUCCESS )
       self._closeChain.run( onSuccess=self._onSuccessClose,
                               onError=self._onError )
-      self.logEvent( "_onSuccessOpenLoad","END" )
+      self.logEnd()
    
    def _onSuccessOpenSave( self ):
-      self.logEvent( "_onSuccessOpenSave" )
+      self.logStart()
       Log.pushStatus( "opened", COLOR.STATUS_SUCCESS )
       self._accountDictLoader.saveToFile( "{d}/{f}".format( d=DECRYPTED_MOUNT_DIR, f=PASSWORDS_FILE_NAME ) )
       Log.pushStatus( "saved", COLOR.STATUS_SUCCESS )
       self._closeChain.run( onSuccess=self._onSuccessClose,
                               onError=self._onError )
-      self.logEvent( "_onSuccessOpenSave","END" )
+      self.logEnd()
    
    def _onSuccessClose( self ):
-      self.logEvent( "_onSuccessClose" )
+      self.logStart()
       Log.pushStatus( "closed", COLOR.STATUS_SUCCESS )
       self._parentOnSuccess()
-      self.logEvent( "_onSuccessClose","END" )
+      self.logEnd()
    
    def _onError( self ):
-      self.logEvent( "_onError" )
+      self.logStart()
       Log.pushStatus( "error", COLOR.STATUS_ERROR )
       self._umountChain.run( onSuccess=self._onErrorUnmounted,
                              onError=self._onErrorUnmounted )
-      self.logEvent( "_onError","END" )
+      self.logEnd()
    
    def _onErrorUnmounted( self ):
-      self.logEvent( "_onErrorUnmounted" )
+      self.logStart()
       self._cryptCloseHandler.run( onSuccess=self._onErrorCryptClosed,
                                    onError=self._onErrorCryptClosed )
-      self.logEvent( "_onErrorUnmounted","END" )
+      self.logEnd()
    
    def _onErrorCryptClosed( self ):
-      self.logEvent( "_onErrorCryptClosed" )
+      self.logStart()
       self._parentOnError()
-      self.logEvent( "_onErrorCryptClosed","END" )
+      self.logEnd()
    
    def __del__( self ):
       self._clean()

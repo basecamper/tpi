@@ -43,7 +43,7 @@ class PasswordManagerElement( ScreenElement, Log ):
       self._accountMenuElement.start()
       
    def onPwEditFinished( self, password : str ):
-      self.logStart( "onPwEditFinished","password {p}".format( p=password ) )
+      self.logStart( "password len {p}".format( p=len( password ) ) )
       self._passwordList.loadPasswords( password=password,
                                         onSuccess=self.onPasswordLoadSuccess,
                                         onError=self.onPasswordLoadError )
@@ -51,7 +51,7 @@ class PasswordManagerElement( ScreenElement, Log ):
       self.logEnd()
    
    def onPwEditCancelled( self, password : str ):
-      self.logStart( "onPwEditCancelled","password {p}".format( p=password ) )
+      self.logStart( "password len {p}".format( p=len( password ) ) )
       self._editingPassword = False
       self.logEnd()
    
@@ -62,7 +62,7 @@ class PasswordManagerElement( ScreenElement, Log ):
       Log.pushStatus( "ERR loading pw", COLOR.STATUS_ERROR )
    
    def onOkButtonDown( self, button ):
-      self.logStart( "onOkButtonDown","button {b}".format( b=button ) )
+      self.logStart( "button {b}".format( b=button ) )
       
       if self._passwordList.isLoaded():
          self.passwordsLoaded()
@@ -75,13 +75,13 @@ class PasswordManagerElement( ScreenElement, Log ):
       self.logEnd()
    
    def onCancelButtonDown( self, button ):
-      self.logStart( "onCancelButtonDown","button {b}".format( b=button ) )
+      self.logStart( "button {b}".format( b=button ) )
       self.logEnd()
    
    def onPrevButtonDown( self, button ):
-      self.logStart( "onPrevButtonDown","button {b}".format( b=button ) )
+      self.logStart( "button {b}".format( b=button ) )
       self.logEnd()
       
    def onNextButtonDown( self, button ):
-      self.logStart( "onNextButtonDown","button {b}".format( b=button ) )
+      self.logStart( "button {b}".format( b=button ) )
       self.logEnd()

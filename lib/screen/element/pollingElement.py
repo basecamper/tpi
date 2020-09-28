@@ -24,8 +24,4 @@ class PollingElement( ScreenElement, Log ):
       super().run()
    
    def _procResult( self, stdout, stderr ):
-      #try:
-         self.dataChildElement.text, self.dataChildElement.color = self.osCommand.parseFunction( stdout, stderr )
-      #   Log.debug("PollingElement._procResult() new text '{text}'".format( text=self.dataChildElement.text ))
-      #except Exception as e:
-      #   Log.debug("ERROR parsing")
+      self.dataChildElement.text, self.dataChildElement.color = self.osCommand.parseFunction( stdout, stderr )

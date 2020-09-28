@@ -3,11 +3,26 @@ from enum import Enum
 from lib.log import Log
 from lib.screen.screenColor import Color
 
-class InteractiveElement( Log ):
+class ScreenElement( Log ):
    def __init__( self,
-                 children : list = None,
+                 text = None,
+                 color = Color.DEFAULT,
+                 isEndingLine = None,
+                 children = None,
+                 index = -1,
                  buttonDownMap : dict = None ):
-      Log.__init__( self, "InteractiveElement", printMessage=False )
+      
+      Log.__init__( self, "ScreenElement", "text: {t} color: {col} isEndingLine: {l} children: {ch}".format( 
+            t=text,
+            col=color,
+            l=isEndingLine,
+            ch=len( children ) if children else 0
+         ) )
+      self.text = text
+      self.color = color
+      self.isEndingLine = isEndingLine or False
+      
+      
       self._children = children or []
       self._exclusivePropagation = False
       self._enablePropagation = True
@@ -15,17 +30,17 @@ class InteractiveElement( Log ):
       self.buttonDownMap = {} if buttonDownMap == None else buttonDownMap
    
    def setExclusivePropagation( self, state : bool ):
-      self.logStart( "setExclusivePropagation","state: {s}".format( s=state ))
+      self.logStart( "state: {s}".format( s=state ))
       self._exclusivePropagation = state
-      self.logEnd( printMessage=False )
+      self.logEnd()
    
    def hasExclusivePropagation( self ):
       return bool( self._exclusivePropagation )
    
    def setEnablePropagation( self, state : bool ):
-      self.logStart( "setEnablePropagation","state: {s}".format( s=state ))
+      self.logStart( "state: {s}".format( s=state ))
       self._enablePropagation = state
-      self.logEnd( printMessage=False )
+      self.logEnd()
    
    def isPropagationEnabled( self ):
       return bool( self._enablePropagation )
@@ -51,13 +66,11 @@ class InteractiveElement( Log ):
       return bool( self._enableButtonDownMap )
    
    def setButtonDownMapActive( self, state : bool ):
-      self.logStart( "setButtonDownMapActive","state: {s}".format( s=state ))
+      self.logStart( "state: {s}".format( s=state ))
       self._enableButtonDownMap = state
-      self.logEnd( printMessage=False )
    
    # return True if a child required an exclusive callback
    def propagateExclusiveButtonDown( self, button ):
-      self.logStart( "propagateExclusiveButtonDown", printMessage=False )
       propagated = False
       
       if self.hasExclusivePropagation():
@@ -66,20 +79,19 @@ class InteractiveElement( Log ):
          # to make sure normal propagation isn't executed afterwards
          buttonProc = self.buttonDownMap.get( button )
          if buttonProc:
-            self.log( message="button {b}".format( b=button ) )
+            self.log( "button {b}".format( b=button ) )
             self.onButtonDown( button )
          else:
-            self.log( message="button {b} not in buttonDownMap".format( b=button ) )
+            self.log( "button {b} not in buttonDownMap".format( b=button ) )
       
       if not self.hasExclusivePropagation() or self.isPropagationEnabled():
          for c in self.getChildren():
             propagated |= c.propagateExclusiveButtonDown( button )
       
-      self.logEnd( printMessage=False )
       return propagated
    
    def onButtonDown( self, button ):
-      self.logStart( "onButtonDown", printMessage=False )
+      self.logStart()
       buttonProc = self.buttonDownMap.get( button )
       if buttonProc != None and self.isButtonDownMapEnabled():
          buttonProc( button )
@@ -88,30 +100,4 @@ class InteractiveElement( Log ):
          for c in self._children:
             returnValue = c.onButtonDown( button )
       else:
-         self.log( message="propagation blocked" )
-      self.logEnd( printMessage=False )
-
-
-class ScreenElement( InteractiveElement, Log ):
-   def __init__( self,
-                 text = None,
-                 color = Color.DEFAULT,
-                 isEndingLine = None,
-                 children = None,
-                 index = -1,
-                 buttonDownMap : dict = None ):
-      
-      InteractiveElement.__init__( self,
-                                   children=children,
-                                   buttonDownMap=buttonDownMap )
-      Log.__init__(  self,
-                     "ScreenElement",
-                     "text: {t} color: {col} isEndingLine {l} children {ch} index {i}".format(  t=text,
-                                                                                                col=color,
-                                                                                                l=isEndingLine,
-                                                                                                ch=bool(children),
-                                                                                                i=index ) )
-      self.text = text
-      self.color = color
-      self.isEndingLine = isEndingLine or False
-      self.index = index
+         self.log( "propagation blocked" )

@@ -12,7 +12,8 @@ class SimpleOsCommandElement( ScreenElement, Log ):
                  command : list,
                  cooldown : int = 0,
                  timeout : int = 3,
-                 callback : object = None ):
+                 callback : object = None,
+                 isEndingLine : bool = True ):
       
       ScreenElement.__init__( self )
       Log.__init__( self, "SimpleOsCommandElement" )
@@ -27,7 +28,7 @@ class SimpleOsCommandElement( ScreenElement, Log ):
                                        cooldown=cooldown,
                                        timeout=timeout )
       self._finishedProcess = None
-      self._dataElement = ScreenElement()
+      self._dataElement = ScreenElement( isEndingLine=isEndingLine )
       self.addChild( self._dataElement )
       self._resetText()
    

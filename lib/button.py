@@ -33,23 +33,31 @@ class ButtonHandler( Log ):
       for v in ButtonMap.values():
          GPIO.setup(v,GPIO.IN, pull_up_down=GPIO.PUD_UP)    # Input with pull-up !
          GPIO.add_event_detect(v, GPIO.RISING, callback=self.buttonDown, bouncetime=100)
+      self.propagating = False
    
    def __del__(self):
-      self.logStart( "__del__" )
+      self.logStart()
       self.log( "GPIO cleanup" )
       GPIO.cleanup()
       self.logEnd()
    
    def _getButtonFromChannel( self, channel ):
-      self.logStart( "_getButtonFromChannel","channel: {c}".format( c=channel ) )
+      self.logStart( "channel: {c}".format( c=channel ) )
       for k, v in ButtonMap.items():
          if v == channel:
             self.logEnd( "returning button {b}".format( b=k ) )
             return k
-      self.logEnd( printMessage=False )
+      self.logEnd()
    
    def buttonDown( self, channel ):
-      self.logStart( "buttonDown channel: {c}".format( c=channel ) )
-      self.parentCallback( self._getButtonFromChannel( channel ) )
+      self.logStart( "channel: {c}".format( c=channel ) )
+      if not self.propagating:
+         self.log( "propagating ..." )
+         self.propagating = True
+         self.parentCallback( self._getButtonFromChannel( channel ) )
+         self.propagating = False
+      else:
+         self.log( "still propagating a buttonDown, skip" )
+      
       self.logEnd()
       

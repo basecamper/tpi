@@ -1,10 +1,15 @@
 from lib.log import Log
-from lib.tools import EMPTY_STRING
+from lib.tools import EMPTY_STRING, raiseNotInstanceOf
 
 class DictNavigator( Log ):
    def __init__( self, d : dict ):
       Log.__init__( self, "_DictNavigator" )
-      self._dict = d
+      
+      self._dict = raiseNotInstanceOf( d, dict )
+      self._currentKeyIndex = 0
+      self._selectedDictPath = []
+   
+   def reset( self ):
       self._currentKeyIndex = 0
       self._selectedDictPath = []
    
@@ -21,7 +26,7 @@ class DictNavigator( Log ):
       return list( self._getSubDict().values() )
    
    def changeKeyIndex( self, delta : int = 0 ):
-      self.logStart("changeKeyIndex delta: {d}".format( d=delta ))
+      self.logStart("delta: {d}".format( d=delta ))
       newIndex = self._currentKeyIndex + delta
       if 0 <= newIndex < len( self._getSubDict() ):
          self._currentKeyIndex = newIndex
@@ -29,33 +34,33 @@ class DictNavigator( Log ):
       return self
    
    def getValue( self ):
-      self.logStart("getValue")
+      self.logStart()
       v = v=self._getValueList()[ self._currentKeyIndex ]
       if isinstance( v, str ):
-         self.logEnd("returning string with len: ".format( len( v ) ) )
+         self.logEnd("returning string with len: {l}".format( l=len( v ) ) )
       else:
-         self.logEnd("returning subDir with len: ".format( len( v ) ) )
+         self.logEnd("returning subDir with len: {l}".format( l=len( v ) ) )
       
       return v
    
    def getKey( self ):
-      self.logStart("getKey")
+      self.logStart()
       self.logEnd("returning {k}".format( k=self._getKeyList()[ self._currentKeyIndex ] ) )
       return self._getKeyList()[ self._currentKeyIndex ]
    
    def hasStringValue( self ):
-      self.logStart("hasStringValue")
+      self.logStart()
       self.logEnd("returning {b}".format( b=isinstance( self.getValue(), str ) ) )
       return isinstance( self.getValue(), str )
    
    def hasOpenedSubDict( self ):
-      self.logStart("hasOpenedSubDict")
-      self.logEnd()
+      self.logStart()
+      self.logEnd( str( bool( len( self._selectedDictPath ) > 0 ) ) )
       return bool( len( self._selectedDictPath ) > 0 )
    
    
    def getSubDictKey( self ):
-      self.logStart("getSubDictKey")
+      self.logStart()
       if len( self._selectedDictPath ) > 0:
          self.logEnd( "returning {k}".format( k=self._selectedDictPath[ -1 ] ) )
          return self._selectedDictPath[ -1 ]
@@ -63,18 +68,20 @@ class DictNavigator( Log ):
       return EMPTY_STRING
    
    def openSubDict( self ):
-      self.logStart("openSubDict")
-      self.logEnd()
+      self.logStart()
       if not self.hasStringValue():
+         self.log( "opening {k}".format( k=self.getKey() ) )
          self._selectedDictPath.append( self.getKey() )
+      self.logEnd()
       return self
    
    def closeSubDict( self ):
-      self.logStart("closeSubDict")
-      self.logEnd()
+      self.logStart()
       if len( self._selectedDictPath ) > 0:
-         k = self._selectedDictPath.pop()
-         self._currentKeyIndex = list( self._getSubDict().keys() ).index( k )
+         key = self._selectedDictPath.pop()
+         self.log( "closed {k}".format( k=key ) )
+         self._currentKeyIndex = list( self._getSubDict().keys() ).index( key )
+      self.logEnd()
       return self
    
    def __str__( self ):

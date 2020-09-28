@@ -28,36 +28,44 @@ class ProcHandlerChain( Log ):
       self._parentOnError.append( func )
    
    def run( self, onSuccess : object = None, onError : object = None ):
-      self.logEvent( "run" )
+      self.logStart()
       self._currentHandlerIndex = 0
       self._tempOnError = onError
       self._tempOnSuccess = onSuccess
       self._runCurrentHandler()
+      self.logEnd()
    
    def _getCurrentHandler( self ):
-      self.logEvent( "gettingCurrentHandler at idx {i}".format( i=self._currentHandlerIndex ) )
+      self.log( "idx {i}".format( i=self._currentHandlerIndex ) )
       return self._procHandlerChain[ self._currentHandlerIndex ]
    
    def _runCurrentHandler( self ):
+      self.logStart()
       self._getCurrentHandler().run( onSuccess=self.onSuccess, onError=self.onError )
+      self.logEnd()
    
    def onSuccess( self ):
+      self.logStart()
       handlerLen = len( self._procHandlerChain )
       self._currentHandlerIndex += 1
-      self.logEvent( "onSuccess idx {i}/{m}".format( i=self._currentHandlerIndex , m=handlerLen ) )
+      self.log( "idx {i}/{m} successful".format( i=self._currentHandlerIndex , m=handlerLen ) )
       if self._currentHandlerIndex >= handlerLen:
-         self.logEvent( "onSuccess","self._tempOnSuccess {s}".format( s=bool(self._tempOnSuccess) ) )
+         self.log( "chain successful {s}".format( s=bool(self._tempOnSuccess) ) )
          if self._tempOnSuccess:
+            self.log( "running success callback func" )
             self._tempOnSuccess()
          self._hasProcessedOk = True
       else:
          self._runCurrentHandler()
+      self.logEnd()
    
    def onError( self ):
-      self.logEvent( "onError","self._tempOnError {s}".format( s=bool(self._tempOnSuccess) ) )
+      self.logStart()
       if self._tempOnError:
+         self.log( "running error callback func" )
          self._tempOnError()
       self._hasProcessedOk = False
+      self.logEnd()
 
 class ProcHandler( Log ):
    
@@ -70,9 +78,7 @@ class ProcHandler( Log ):
                  cooldown = 0,
                  timeout = 3,
                  stdin : str = None ):
-      Log.__init__( self,
-                    className="ProcHandler",
-                    message="command {command} cooldown {c} timeout {t}".format(command=command, c=cooldown, t=timeout) )
+      Log.__init__( self, "ProcHandler", "command: {command} cooldown: {c} timeout: {t}".format(command=command, c=cooldown, t=timeout) )
       
       self._command = command
       self._callback = [ callback ] if callback else []
@@ -90,7 +96,7 @@ class ProcHandler( Log ):
       self._stdin = stdin.encode() if stdin else None
    
    def run( self, onError : object = None, onSuccess : object = None ):
-      self.logStart( "run","onSuccess {s} onError {e}".format( e=bool(onError), s=bool(onSuccess)) )
+      self.logStart( "has param: onSuccess {s} onError {e}".format( e=bool(onError), s=bool(onSuccess)) )
       
       
       if self._cooldown > 0:
@@ -121,23 +127,23 @@ class ProcHandler( Log ):
       return bool( self._thread and self._thread.isAlive() )
    
    def hasProcessedOk( self ):
-      self.logEvent( "hasProcessedOk","{r}".format(
+      self.log( "{r}".format(
          r=bool( self._returnValue != None and self._returnValue == SYSTEM_OK ) ) )
       return bool( self._returnValue != None and self._returnValue == SYSTEM_OK )
    
    def _onProcessFinished( self, stdout, stderr ):
-      self.logEvent( "_onProcessFinished","has functions: tempOnSuccess: {s}, tempOnError: {e}".format(
+      self.logStart( "has functions: tempOnSuccess: {s}, tempOnError: {e}".format(
          e=bool(self._tempOnError), s=bool(self._tempOnSuccess) ) )
       
       if self.hasProcessedOk():
          if self._tempOnSuccess:
-            self.logEvent( "_onProcessFinished","running self._tempOnSuccess()" )
+            self.log( "running self._tempOnSuccess()" )
             self._tempOnSuccess()
          for f in self._onSuccess:
             f()
       else:
          if self._tempOnError:
-            self.logEvent( "_onProcessFinished","running self._tempOnError()" )
+            self.log( "running self._tempOnError()" )
             self._tempOnError()
          for f in self._onError:
             f()
@@ -150,24 +156,22 @@ class ProcHandler( Log ):
       
       for f in self._callback:
          f( stdout, stderr )
-   
+      self.logEnd()
    def _getTimestampPassedSeconds( self, now : object = None ):
       return ( ( now or datetime.now() ) - self._cooldownTimestamp ).seconds
    
    def _evalSetTimestamp( self ):
-      self.logStart( "_evalSetTimestamp" )
+      self.logStart()
       
       now = datetime.now()
       if not self._cooldownTimestamp or ( self._getTimestampPassedSeconds( now=now ) > self._cooldown ):
          self.logEnd( "cooldown passed, timestamp: {t} now: {n}".format( t=self._cooldownTimestamp, n=now ) )
          self._cooldownTimestamp = now
          return True
-      
-      self.logEnd( printMessage=False )
       return False
             
    def _runThread( self ):
-      self.logStart( "_runThread" )
+      self.logStart()
       if not self.isProcessing():
          self.log( "not processing .. creating thread" )
          self._thread = threading.Thread(target=self._runInThread, args=( self._onProcessFinished, self._command ))
@@ -175,31 +179,40 @@ class ProcHandler( Log ):
       self.logEnd()
    
    def _runInThread( self, func, args ):
-      self.logEvent( method="_runInThread", message="starting, args {a} input {i}".format( a=args, i=self._stdin ) )
+      self.logStart( "args {a} input {i}".format( a=args, i=self._stdin ) )
       stdout, stderr = None, None
       
       if self._stdin != None:
+         self.log( "creating subprocess with stdin pipe" )
          self._proc = Popen( args, stdout=PIPE, stdin=PIPE, close_fds=True )
       else:
+         self.log( "creating subprocess" )
          self._proc = Popen( args, stdout=PIPE, close_fds=True )
       
       if self._timeout > 0:
          try:
+            self.log( "communicating..." )
             if self._stdin != None:
                stdout, stderr = self._proc.communicate( timeout=self._timeout, input=self._stdin )
             else:
                stdout, stderr = self._proc.communicate( timeout=self._timeout )
                
-            self.logEvent( method="_runInThread", message="subprocess finished command: {c}".format( c=args ) )
+            self.log( "subprocess finished, command: {c}".format( c=args ) )
          except TimeoutExpired:
             self._proc.kill()
-            self.logEvent( method="_runInThread", message="subprocess due to timeout cancelled! command: {c}".format( c=args ) )
+            self.log( "subprocess cancelled due to timeout, command: {c}".format( c=args ) )
       else:
          if self._stdin != None:
             stdout, stderr = self._proc.communicate( input=self._stdin )
          else:
-            stdout, stderr = self._proc.communicate() # TODO cmon ... 4 calls
+            stdout, stderr = self._proc.communicate()
+      
       self._returnValue = self._proc.returncode
+      
       if func:
+         self.log( "running callback func" )
          func( stdout, stderr )
+      
+      self.logEnd( "stdout: {o} stderr: {e}".format( o=bool( stdout ), e=bool( stderr ) ) )
+      
       return ( stdout, stderr )

@@ -93,22 +93,43 @@ class KeyStroker( Log ):
       return (NULL_CHAR*8).encode()
    
    def _send( self, text : list ):
+      
+      def _sendList( l : list ):
+         with open( '/dev/hidg0', 'rb+' ) as fd:
+            self.log( "/dev/hidg0 opened, writing {a} chars".format( a=len( l ) ) )
+            for c in l:
+               fd.write( c )
+      
+      self.logStart()
+      
+      releaseKeys = self._genReleaseKeys()
       try:
          lastChar = None
+         tempList = []
+         
          for c in text:
-            with open( '/dev/hidg0', 'rb+' ) as fd:
-               fd.write( c )
+            
+            tempList.append( c )
+            
+            if len( tempList ) >= 30 or c == releaseKeys:
+               _sendList( tempList )
+               tempList = []
+         
+         if len( tempList ) >= 0:
+            _sendList( tempList )
+         
       except Exception as e:
-         self.log( "EXCEPTION" )
+         self.logException( e )
+      self.logEnd()
    
    def _parseText( self, text : str, layout : str = KEYSETTING.de ):
-      self.logStart( "_parseText", "parsing {c} characters".format( c=len(text) ) )
+      self.logStart( "parsing {c} characters".format( c=len(text) ) )
       li = []
       kmap = self._layouts[ layout ]
       lastChar = None
       for c in text:
          if c in kmap:
-            if ( lastChar != None and lastChar == c ) or c == "\n":
+            if ( lastChar != None and lastChar == c ) or lastChar == "\n":
                li.append( self._genReleaseKeys() )
             li.append( kmap[ c ] )
             lastChar = c
@@ -118,7 +139,7 @@ class KeyStroker( Log ):
       return li
    
    def test( self ):
-      self.logStart("test")
+      self.logStart()
       li = []
       
       #counter = 4
@@ -225,7 +246,7 @@ class KeyStroker( Log ):
       self.logEnd()
    
    def send( self, text : str ):
-      self.logStart("send")
+      self.logStart()
       if not self._sending:
          self.log("sending stringLen: {t}".format(t=len(text)))
          self._sending = True

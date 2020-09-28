@@ -44,7 +44,7 @@ class PasswordEditElement( ScreenElement, Log ):
       self.setButtonDownMapActive( False )
    
    def startEditing( self, onEditingFinished : object = None, onEditingCancelled : object = None ):
-      self.logStart( "startEditing" )
+      self.logStart()
       self.setExclusivePropagation( True )
       self.setButtonDownMapActive( True )
       self._parentOnEditingFinished = onEditingFinished
@@ -58,12 +58,12 @@ class PasswordEditElement( ScreenElement, Log ):
       self.logEnd()
    
    def run( self ):
-      self.logStart( "run" )
+      self.logStart()
       self._updatePwTextElements()
       self.logEnd()
    
    def _endEditingCancelled( self ):
-      self.logStart( "_endEditingCancelled" )
+      self.logStart()
       
       self.setExclusivePropagation( False )
       self.setButtonDownMapActive( False )
@@ -72,7 +72,7 @@ class PasswordEditElement( ScreenElement, Log ):
       self.logEnd()
    
    def _endEditingFinished( self ):
-      self.logStart( "_endEditingFinished" )
+      self.logStart()
       if self.getCurrentCharIndex() >= self.getPasswordLength():
          self._saveCurrentChar()
       
@@ -83,7 +83,7 @@ class PasswordEditElement( ScreenElement, Log ):
       self.logEnd()
    
    def _updatePwTextElements( self ):
-      self.logStart( "_updatePwTextElements" )
+      self.logStart()
       char, pre, post = EMPTY_STRING, EMPTY_STRING, EMPTY_STRING
       
       if self.isEditingActive():
@@ -122,17 +122,17 @@ class PasswordEditElement( ScreenElement, Log ):
       self._pwText = str()
    
    def _setCurrentCharFromPool( self ):
-      self.logStart( "_setCurrentCharFromPool" )
+      self.logStart()
       self._setCurrentChar( self._charPoolManager.getCharacter() )
       self.logEnd( self._pwTextCurrentChar )
    
    def _setCurrentCharFromPassword( self ):
-      self.logStart( "_setCurrentCharFromPassword" )
+      self.logStart()
       self._setCurrentChar( self._pwText[self._pwTextCurrentCharIndex] )
       self.logEnd( self._pwTextCurrentChar )
    
    def _decrementCurrentCharIndex( self ):
-      self.logStart( "_decrementCurrentCharIndex" )
+      self.logStart()
       
       if self._pwTextCurrentCharIndex == 0:
          self.logEnd( str(False) )
@@ -144,7 +144,7 @@ class PasswordEditElement( ScreenElement, Log ):
       return True
    
    def _incrementCurrentCharIndex( self ):
-      self.logStart( "_incrementCurrentCharIndex" )
+      self.logStart()
       
       self._saveCurrentChar()
       
@@ -159,30 +159,30 @@ class PasswordEditElement( ScreenElement, Log ):
       return True
    
    def _saveCurrentChar( self ):
-      self.logStart( "_saveCurrentSelectedChar" )
+      self.logStart()
       idx = self._pwTextCurrentCharIndex
       self._pwText = self._pwText[:idx] + self._pwTextCurrentChar + self._pwText[idx + 1:]
       self.logEnd()
    
    def onOkButtonDown( self, button ):
-      self.logStart( "onOkButtonDown" )
+      self.logStart()
       self._endEditingFinished()
       self.logEnd()
    
    def onPrevButtonDown( self, button ):
-      self.logStart( "onPrevButtonDown" )
+      self.logStart()
       if not self._decrementCurrentCharIndex():
          self._clearPassword()
          self._endEditingCancelled()
       self.logEnd( "index: {i} pass: {p}".format( i=self._pwTextCurrentCharIndex, p=self._pwText ) )
       
    def onNextButtonDown( self, button ):
-      self.logStart( "onNextButtonDown" )
+      self.logStart()
       self._incrementCurrentCharIndex()
       self.logEnd( "index: {i} pass: {p}".format( i=self._pwTextCurrentCharIndex, p=self._pwText ) )
       
    def onIncreaseButtonDown( self, button ):
-      self.logStart( "onIncreaseButtonDown" )
+      self.logStart()
       
       self._charPoolManager.next()
       self._setCurrentCharFromPool()
@@ -190,7 +190,7 @@ class PasswordEditElement( ScreenElement, Log ):
       self.logEnd()
       
    def onDecreaseButtonDown( self, button ):
-      self.logStart( "onDecreaseButtonDown" )
+      self.logStart()
       
       self._charPoolManager.prev()
       self._setCurrentCharFromPool()
@@ -198,19 +198,19 @@ class PasswordEditElement( ScreenElement, Log ):
       self.logEnd()
       
    def onCapsButtonDown( self, button ):
-      self.logStart( "onCapsButtonDown" )
+      self.logStart()
       self._toggleCharacters()
       self._setCurrentCharFromPool()
       self.logEnd()
       
    def onNumbersButtonDown( self, button ):
-      self.logStart( "onNumbersButtonDown" )
+      self.logStart()
       self._toggleNumbers()
       self._setCurrentCharFromPool()
       self.logEnd()
       
    def onSymbolsButtonDown( self, button ):
-      self.logStart( "onSymbolsButtonDown" )
+      self.logStart()
       self._toggleSymbols()
       self._setCurrentCharFromPool()
       self.logEnd()

@@ -10,7 +10,6 @@ from lib.screen.screenColor import Color
 from lib.screen.element import ScreenElement
 from lib.screen.element.currentTimeElement import CurrentTimeElement
 from lib.screen.element.pollingElement import PollingElement
-from lib.screen.element.executeCommandElement import ExecuteCommandElement
 
 CMD_DISPLAY_SPLASH = ['dd','if=/opt/splash.bmp','of=/dev/fb1','bs=655555','count=1','status=none']
 
@@ -50,7 +49,7 @@ class Overview( ScreenElement, Log ):
          self.enableSplash()
    
    def run( self ):
-      self.logStart("run")
+      self.logStart()
       if not self.splashDisplayed:
          super().run()
       
@@ -62,7 +61,7 @@ class Overview( ScreenElement, Log ):
       self.logEnd()
    
    def toggleSplash( self, button ):
-      self.logStart("toggleSplash")
+      self.logStart()
       if self.splashDisplayed:
          self.disableSplash()
       else:
@@ -70,7 +69,7 @@ class Overview( ScreenElement, Log ):
       self.logEnd()
    
    def enableSplash( self ):
-      self.logStart("enableSplash")
+      self.logStart()
       GlobalRuntime.refreshScreen = False
       self.setExclusivePropagation( True )
       self.setEnablePropagation( False )
@@ -79,7 +78,7 @@ class Overview( ScreenElement, Log ):
       self.logEnd()
    
    def disableSplash( self ):
-      self.logStart("disableSplash")
+      self.logStart()
       GlobalRuntime.refreshScreen = True
       self.setExclusivePropagation( False )
       self.setEnablePropagation( True )

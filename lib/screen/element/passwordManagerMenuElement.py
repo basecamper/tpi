@@ -36,7 +36,7 @@ class PasswordManagerMenuElement( ScreenElement, Log ):
       self.setButtonDownMapActive( False )
    
    def run( self ):
-      self.logStart("run")
+      self.logStart()
       sendprompt = ""
       if self._accountDict.hasStringValue():
          sendprompt = ">>>" if self._confirmed else ">"
@@ -52,7 +52,7 @@ class PasswordManagerMenuElement( ScreenElement, Log ):
       self.logEnd()
    
    def start( self ):
-      self.logStart("start")
+      self.logStart()
       self.setExclusivePropagation( True )
       self.setButtonDownMapActive( True )
       self._active = True
@@ -62,7 +62,7 @@ class PasswordManagerMenuElement( ScreenElement, Log ):
       self.logEnd()
    
    def end( self ):
-      self.logStart("end")
+      self.logStart()
       self._active = False
       self.setExclusivePropagation( False )
       self.setButtonDownMapActive( False )
@@ -70,11 +70,12 @@ class PasswordManagerMenuElement( ScreenElement, Log ):
       self.logEnd()
    
    def onOkButtonDown( self, button ):
-      self.logEvent("onOkButtonDown")
+      self.logStart()
       self.end()
+      self.logEnd()
    
    def onNextButtonDown( self, button ):
-      self.logEvent("onNextButtonDown")
+      self.logStart()
       if self._accountDict.hasStringValue():
          if not self._confirmed:
             self._confirmed = True
@@ -85,21 +86,25 @@ class PasswordManagerMenuElement( ScreenElement, Log ):
             self._keyStroker.send( self._accountDict.getValue() )
       else:
          self._accountDict.openSubDict()
+      self.logEnd()
    
    def onPrevButtonDown( self, button ):
-      self.logEvent("onPrevButtonDown")
+      self.logStart()
       self._confirmed = False
       if self._accountDict.hasOpenedSubDict():
          self._accountDict.closeSubDict()
       else:
          self.end()
+      self.logEnd()
          
    def onDecreaseButtonDown( self, button ):
-      self.logEvent("onDecreaseButtonDown")
+      self.logStart()
       self._confirmed = False
       self._accountDict.changeKeyIndex( -1 )
+      self.logEnd()
       
    def onIncreaseButtonDown( self, button ):
-      self.logEvent("onIncreaseButtonDown")
+      self.logStart()
       self._confirmed = False
       self._accountDict.changeKeyIndex( 1 )
+      self.logEnd()

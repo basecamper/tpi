@@ -40,27 +40,27 @@ class ScreenManager( Log ):
    
    def _run( self ):
       self._setTimestamp()
+      self.logStart()
       if not self.isRefreshing and GlobalRuntime.refreshScreen:
+         
          self.isRefreshing = True
          
+         self.log( "Refreshing main screen..." )
          self.screen.run()
+         
+         self.log( "Reprinting elements..." )
          
          if self.cursesWindow:
             self.printElements( self.screen, self.cursesWindow )
          else:
             self.printElements( self.screen )
-            
+         
          self.isRefreshing = False
+      self.logEnd()
    
    def recursivePrintElements( self, element : object, lineCounter : int = 0, charCounter : int = 0, win : object = None ):
-      # self.logStart( "recursivePrintElements", "line: {l} char: {ch} text: {t} {col} ({colv}) children {clen}{e}".format(
-      #    l=lineCounter,
-      #    ch=charCounter,
-      #    t=element.text,
-      #    col=element.color,
-      #    colv=element.color.value,
-      #    clen=len(element.getChildren()),
-      #    e=" - LINEEND" if element.isEndingLine else "") )
+      
+      self.log( "{o}: text: {t} color: {c}".format( o=element.getClassName(), t=element.text, c=str( element.color ) ) )
       
       if element.text:
          if win:
@@ -70,17 +70,14 @@ class ScreenManager( Log ):
       for child in element.getChildren():
          lineCounter, charCounter = self.recursivePrintElements( child, lineCounter, charCounter, win )
       
-      
       if element.isEndingLine:
-         # self.log( message="line: {l} char: {c} - LINEENDING".format( l=lineCounter, c=charCounter ) )
          charCounter = 0
          lineCounter += 1
-      
-      # self.logEnd( printMessage=False )      
+         
       return lineCounter, charCounter
    
    def printElements( self, screen, win = None ):
-      self.logStart( "printElements","cursesWindow: {win}".format( win=bool(win) ) )
+      self.logStart( "cursesWindow: {win}".format( win=bool(win) ) )
       if win:
          self.log("clearing curses window")
          win.clear()

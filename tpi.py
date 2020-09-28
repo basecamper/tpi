@@ -15,7 +15,7 @@ class Control( Log ):
    def __init__( self ):
       Log.__init__( self, "Control" )
       
-      self.log( logMethod=False, message="config: {c}".format( c=ConfigReader.getInstance().getData() ) )
+      self.log( "config: {c}".format( c=ConfigReader.getInstance().getData() ) )
       
       if Control.screenManager or Control.buttonHandler: # "enforce singleton..."
          raise Exception( "initialize Control once!")

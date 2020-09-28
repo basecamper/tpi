@@ -1,5 +1,5 @@
-
 import sys
+import inspect
 
 from lib.glob import Global
 from lib.tools import EMPTY_STRING, getMsTimestamp
@@ -8,63 +8,113 @@ class Log( object ):
    _statusLines = []
    _popStatusTimestamp = None
    _wasStatusChecked = True
-   
-   def __init__( self, className : str = None, message : str = None, printMessage : bool = True ):
-      object.__init__( self )
-      self._methodNames = []
+   def __init__( self, className : str, initMessage : str = None ):
       self._className = className
-      if printMessage:
-         Log.debug( message="INIT  {m}".format( m=self.formatMsg( "__init__", message ) ) )
-         
+      if Global.DEBUG_PRINT or Global.DEBUG:
+         stack = inspect.stack()
+         Log.debug(
+            Log._formatMessage(
+               prefix="INIT  ",
+               className=self._className,
+               method=stack[1].function,
+               message=initMessage,
+               stack=stack ) )
    
    def getClassName( self ):
       return self._className
    
+   def logStart( self, message : str = None ):
+      if Global.DEBUG_PRINT or Global.DEBUG:
+         stack = inspect.stack()
+         Log.debug(
+            Log._formatMessage(
+               prefix="START ",
+               className=self._className,
+               method=stack[1].function,
+               message=message,
+               stack=stack ) )
+   
+   def log( self, message : str = None ):
+      if Global.DEBUG_PRINT or Global.DEBUG:
+         stack = inspect.stack()
+         Log.debug(
+            Log._formatMessage(
+               prefix="      ",
+               className=self._className,
+               method=stack[1].function,
+               message=message,
+               stack=stack ) )
+   
+   def logEnd( self, message : str = None ):
+      if Global.DEBUG_PRINT or Global.DEBUG:
+         stack = inspect.stack()
+         Log.debug(
+            Log._formatMessage(
+               prefix="END   ",
+               className=self._className,
+               method=stack[1].function,
+               message=message,
+               stack=stack ) )
+   
+   def logError( self, message : str = None ):
+      if Global.DEBUG_PRINT or Global.DEBUG:
+         stack = inspect.stack()
+         Log._logStack( stack,
+                        self._className,
+                        stack[1].function )
+         
+         Log.debug(
+            Log._formatMessage(
+               prefix="ERROR ",
+               className=self._className,
+               method=stack[1].function,
+               message=message,
+               stack=stack ) )
+   
+   def logException( self, e : Exception ):
+      if Global.DEBUG_PRINT or Global.DEBUG:
+         stack = inspect.stack()
+         Log._logStack( stack, self._className, stack[1].function )
+         
+         Log.debug(
+            Log._formatMessage(
+               prefix="ERROR ",
+               className=self._className,
+               method=stack[1].function,
+               message="EXCEPTION: {e}".format( e=e ),
+               stack=stack
+               ) )
+   
    @staticmethod
-   def _formatMsg( className : str, method : str, message : str ):
-      return "{c}{s}{m}{s2}{t}".format( c=className,
-                                        s="." if className and method else EMPTY_STRING,
-                                        m=method or EMPTY_STRING,
-                                        s2=" " if message else EMPTY_STRING,
-                                        t=message if message else EMPTY_STRING ) 
-   
-   def formatMsg( self, method : str, message : str = None ):
-      return Log._formatMsg( className=self.getClassName(), method=method, message=message )
-   
-   def logStart( self, method : str, message : str = None, printMessage : bool = True ):
-      self._methodNames.append( method )
-      if printMessage:
-         Log.debug( message="START {m}".format( m=self.formatMsg( method, message ) ) )
-   
-   def log( self, message : str, logMethod : bool = True ):
-      method = None
-      if logMethod and len(self._methodNames) > 0:
-         method = self._methodNames[-1]
-      Log.debug( message="      {m}".format( m=self.formatMsg( method, message ) ) )
-   
-   def logError( self, message : str, logMethod : bool = True ): # TODO printMessage and logMethod
-      method = None
-      if logMethod and len(self._methodNames) > 0:
-         method = self._methodNames[-1]
-      Log.debug( message="ERROR {m}".format( m=self.formatMsg( method, message ) ) )
-   
-   def logEvent( self, method : str = None, message : str = None ):
-      Log.debug( message="EVENT {m}".format( m=self.formatMsg( method=method, message=message ) ) )
-   
-   def logEnd( self, message : str = None, printMessage : bool = True ):
-      method = self._methodNames.pop()
-      if printMessage:
-         Log.debug( message="END   {m}".format( m=self.formatMsg( method, message ) ) )
-   
-   def logException( self, exception : Exception, message : str = "" ):
-      Log.debug( message="ERROR {emsg}".format( emsg=self.formatMsg( message="{m} EXCEPTION: {e}".format( m=message, e=exception ) ) ) )
+   def _logStack( stack, className : str, method : str ):
+      for f in stack:
+         Log.debug( Log._formatMessage(
+               prefix="STACK ",
+               className=className,
+               method=method,
+               message="{n}: {m}".format(
+                  n=stack.index( f ),
+                  m=f.function ),
+               stack=stack ) )
    
    @staticmethod
-   def wasStatusChecked():
-      return bool( Log._wasStatusChecked )
+   def _formatMessage( prefix : str, className : str, method : str, message : str = None, stack = None ):
+      
+      indent = ""
+      iAmount = (      len( stack ) - Global.LOG_REDUCE_INDENT
+                  if   Global.LOG_REDUCE_INDENT < len( stack )
+                  else 0 )
+      if iAmount > 0:
+         indent = " " * iAmount
+      
+      return "{p}{i}{c} {me}{m}".format( i=indent,
+                                         p=prefix,
+                                         c=className,
+                                         me=method,
+                                         m=" {im}".format( im=message ) if message else EMPTY_STRING ) 
    
    @staticmethod
-   def debug( className : str = None, method : str = None, message : str = None ):
+   def debug( message : str ):
       if message:
          if Global.DEBUG_PRINT or Global.DEBUG:
             sys.stderr.write( "{m} \n".format( m=message ) )
@@ -84,3 +134,7 @@ class Log( object ):
             Log._popStatusTimestamp = now
             return Log._statusLines.pop(0)
       return ( None, None )
+   
+   @staticmethod
+   def wasStatusChecked():
+      return bool( Log._wasStatusChecked )
