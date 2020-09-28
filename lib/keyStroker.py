@@ -20,7 +20,7 @@ class KeyMapTools( Log ):
    
    @staticmethod
    def genKey( keymap : dict, prefix, charcode : int, char : str ):
-      keymap[ char ] = ( prefix + NULL_CHAR + chr( charcode ) + NULL_CHAR*5 ).encode()
+      keymap[ char ] = KeyMapTools.getKey( prefix, charcode )
    
    @staticmethod
    def genArrayLoop( keymap : dict, prefix, startCharcode : int, strings ):
@@ -46,6 +46,7 @@ class KeyStroker( Log ):
       KeyMapTools.genKey      ( self._keyMap_en, NULL_CHAR, 44, " " )
       KeyMapTools.genArrayLoop( self._keyMap_en, NULL_CHAR, 45, "-=[]\\" )
       KeyMapTools.genArrayLoop( self._keyMap_en, NULL_CHAR, 51, ";'`,./" )
+      KeyMapTools.genKey      ( self._keyMap_en, SHIFT_KEY, 52, "’" ) # map special ´ to '
       KeyMapTools.genArrayLoop( self._keyMap_en, SHIFT_KEY, 45, "_+{}|" )
       KeyMapTools.genArrayLoop( self._keyMap_en, SHIFT_KEY, 51, ":\"~<>?" )
       KeyMapTools.genKey      ( self._keyMap_en, NULL_CHAR, 57, "caps" )
@@ -69,7 +70,7 @@ class KeyStroker( Log ):
       KeyMapTools.genArrayLoop( self._keyMap_de, SHIFT_KEY, 51, "ÖÄ°;:_" )
       KeyMapTools.genKey      ( self._keyMap_de, NULL_CHAR, 49, "#" )
       KeyMapTools.genKey      ( self._keyMap_de, SHIFT_KEY, 49, "'" )
-      KeyMapTools.genKey      ( self._keyMap_de, SHIFT_KEY, 49, "’" ) # map special ´ to
+      KeyMapTools.genKey      ( self._keyMap_de, SHIFT_KEY, 49, "’" ) # map special ´ to '
       KeyMapTools.genKey      ( self._keyMap_de, ALT_GR_KEY, 45, "\\" )
       KeyMapTools.genKey      ( self._keyMap_de, ALT_GR_KEY, 48, "~" )
       KeyMapTools.genKey      ( self._keyMap_de, NULL_CHAR, 57, "caps" )
@@ -79,15 +80,11 @@ class KeyStroker( Log ):
       KeyMapTools.genArrayLoop( self._keyMap_de, NULL_CHAR, 58, [ "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12" ] )
       KeyMapTools.genArrayLoop( self._keyMap_de, NULL_CHAR, 144, [ "LANG1", "LANG2", "LANG3", "LANG4", "LANG5", "LANG6", "LANG7", "LANG8", "LANG9" ] )
       
-      
       KeyMapTools.genArrayLoop( self._keyMap_alpha, NULL_CHAR, 4, "abcdefghijklmnopqrstuvwxzy" )
       KeyMapTools.genArrayLoop( self._keyMap_alpha, SHIFT_KEY, 4, "ABCDEFGHIJKLMNOPQRSTUVWXZY" )
       KeyMapTools.genArrayLoop( self._keyMap_alpha, NULL_CHAR, 30, "1234567890" )
       
-      self._nonReleaseRequired = "abcdefghijklmnopqrstuvwxzyABCDEFGHIJKLMNOPQRSTUVWXZY1234567890"
-      
       self._layouts = { KEYSETTING.de : self._keyMap_de, KEYSETTING.en : self._keyMap_en, KEYSETTING.alpha : self._keyMap_alpha };
-   
    
    def _genReleaseKeys( self ):
       return (NULL_CHAR*8).encode()
@@ -129,7 +126,7 @@ class KeyStroker( Log ):
       lastChar = None
       for c in text:
          if c in kmap:
-            if ( lastChar != None and lastChar == c ) or lastChar == "\n":
+            if lastChar == c or lastChar == "\n":
                li.append( self._genReleaseKeys() )
             li.append( kmap[ c ] )
             lastChar = c
@@ -156,6 +153,7 @@ class KeyStroker( Log ):
          print( k )
       
       counter = 30
+      
       for c in range(10):
          charCode = counter + c
          li += self._parseText( str(charCode) )
@@ -184,6 +182,7 @@ class KeyStroker( Log ):
          li = []
       
       counter = 44
+      
       for c in range(13):
          charCode = counter + c
          li += self._parseText( str(charCode) )
@@ -192,6 +191,7 @@ class KeyStroker( Log ):
          li.append( KeyMapTools.getKey( NULL_CHAR, 40 ) )
          self._send( li )
          li = []
+      
       for c in range(13):
          charCode = counter + c
          li += self._parseText( str(charCode)+"s" )
@@ -200,6 +200,7 @@ class KeyStroker( Log ):
          li.append( KeyMapTools.getKey( NULL_CHAR, 40 ) )
          self._send( li )
          li = []
+      
       for c in range(13):
          charCode = counter + c
          li += self._parseText( str(charCode)+"a" )
@@ -210,6 +211,7 @@ class KeyStroker( Log ):
          li = []
       
       counter = 100
+      
       li += self._parseText( str(counter) )
       li.append( KeyMapTools.getKey( NULL_CHAR, 43 ) )
       li.append( KeyMapTools.getKey( NULL_CHAR, counter ) )
@@ -226,6 +228,7 @@ class KeyStroker( Log ):
       li = []
       
       counter = 103
+      
       li += self._parseText( str(counter) )
       li.append( KeyMapTools.getKey( NULL_CHAR, 43 ) )
       li.append( KeyMapTools.getKey( NULL_CHAR, counter ) )
@@ -240,7 +243,6 @@ class KeyStroker( Log ):
       li.append( KeyMapTools.getKey( NULL_CHAR, 40 ) )
       self._send( li )
       li = []
-      
       
       self.send( "\tabcdefghijklmnopqrstuvwxyz\nABCDEFGHIJKLMNOPQRSTUVWXYZ\n1234567890ß´\n!\"§$%&/()=?`\nöäüÖÄÜ\n,.-#;:_'\n+*~<>|\n" )
       self.logEnd()
