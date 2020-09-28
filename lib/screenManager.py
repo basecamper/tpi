@@ -60,11 +60,19 @@ class ScreenManager( Log ):
    
    def recursivePrintElements( self, element : object, lineCounter : int = 0, charCounter : int = 0, win : object = None ):
       
-      self.log( "{o}: text: {t} color: {c}".format( o=element.getClassName(), t=element.text, c=str( element.color ) ) )
+      self.log( "{o}: #l/c: {l}/{ch} text: {t} color: {co}".format(
+            o=element.getClassName(), l=lineCounter, ch=charCounter, t=element.text, co=str( element.color ) ) )
       
       if element.text:
          if win:
-            win.addString( lineCounter, charCounter, element.text, element.color )
+            try:
+               win.addString( lineCounter, charCounter, element.text, element.color )
+            except Exception as e:
+               # screen might be full
+               self.logError("Exception caught '{ex}'".format( ex=e ))
+               if lineCounter >= 8:
+                  self.log("a too high linecount (8) was reached!")
+               raise( e )
          charCounter += len(element.text)
       
       for child in element.getChildren():
@@ -73,7 +81,7 @@ class ScreenManager( Log ):
       if element.isEndingLine:
          charCounter = 0
          lineCounter += 1
-         
+      
       return lineCounter, charCounter
    
    def printElements( self, screen, win = None ):
@@ -83,11 +91,7 @@ class ScreenManager( Log ):
          win.clear()
       
       self.log("printing elements")
-      try:
-         self.recursivePrintElements( screen, 0, 0, win )
-      except Exception as e:
-         # screen might be full
-         self.logError("Exception caught '{ex}'".format( ex=e ))
+      self.recursivePrintElements( screen, 0, 0, win )
       
       if win:
          self.log("refreshing curses window")

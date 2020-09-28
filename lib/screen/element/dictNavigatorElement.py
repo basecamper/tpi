@@ -21,7 +21,7 @@ class DictNavigatorElement( ScreenElement, Log ):
       
       self._titleElement = ScreenElement( isEndingLine=True, text=title )
       self._upperDataElement = ScreenElement( isEndingLine=True )
-      self._lowerDataElement = ScreenElement( isEndingLine=True )
+      self._lowerDataElement = ScreenElement()
       
       self._onSelected = onSelected
       self._dict = raiseNotInstanceOf( dictNavigator, DictNavigator )
@@ -84,11 +84,10 @@ class DictNavigatorElement( ScreenElement, Log ):
             if not self._selectionConfirmed:
                self._selectionConfirmed = True
             else:
+               self._selectionConfirmed = False
                self._onSelected()
-               self.end()
          else:
             self._dict.openSubDict()
-      self.logEnd()
    
    def onPrevButtonDown( self, button ):
       self.logStart()
