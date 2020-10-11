@@ -47,7 +47,16 @@ class MainMenu( ScreenElement, Log ):
    
    _runtimeConfigDict = DictNavigator(
          {  RUNTIME_CONFIG_KEY.keymap : { "de" : KEYSETTING.de,
-                                          "en" : KEYSETTING.en } } )
+                                          "en" : KEYSETTING.en },
+            RUNTIME_CONFIG_KEY.keyTimeout : { "0" : "0",
+                                              "0.005" : "0.005",
+                                              "0.01" : "0.01",
+                                              "0.02" : "0.02",
+                                              "0.05" : "0.05",
+                                              "0.1" : "0.1",
+                                              "0.2" : "0.2",
+                                              "0.5" : "0.5" }
+         })
    _sysCmdDict = DictNavigator(
          {  "poweroff" : VALUE_POWEROFF,
             "reboot" : VALUE_REBOOT,

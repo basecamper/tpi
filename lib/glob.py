@@ -12,6 +12,7 @@ class Global:
 
 class RUNTIME_CONFIG_KEY:
    keymap = "keymap"
+   keyTimeout = "keyTimeout"
 
 class GlobalRuntime:
    

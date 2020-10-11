@@ -2,6 +2,7 @@ from lib.log import Log
 from lib.glob import GlobalRuntime, RUNTIME_CONFIG_KEY
 
 from enum import Enum
+from time import sleep
 
 ALT_GR_KEY = chr(64)
 SHIFT_KEY = chr(32)
@@ -91,6 +92,12 @@ class KeyStroker( Log ):
    
    def _send( self, text : list ):
       
+      sleepTime = float( 0 )
+      
+      if GlobalRuntime.hasRuntimeConfig( RUNTIME_CONFIG_KEY.keyTimeout ):
+         sleepTime = float( GlobalRuntime.getRuntimeConfig( RUNTIME_CONFIG_KEY.keyTimeout ) )
+      
+      
       def _sendList( l : list ):
          with open( '/dev/hidg0', 'rb+' ) as fd:
             self.log( "/dev/hidg0 opened, writing {a} chars".format( a=len( l ) ) )
@@ -100,6 +107,8 @@ class KeyStroker( Log ):
       self.logStart()
       
       releaseKeys = self._genReleaseKeys()
+      newlineKey = kmap[ "\n" ]
+      
       try:
          lastChar = None
          tempList = []
@@ -108,9 +117,11 @@ class KeyStroker( Log ):
             
             tempList.append( c )
             
-            if len( tempList ) >= 30 or c == releaseKeys:
+            if len( tempList ) >= 30 or c == releaseKeys or c == newlineKey:
                _sendList( tempList )
                tempList = []
+               if sleepTime > 0:
+                  sleep( sleepTime )
          
          if len( tempList ) >= 0:
             _sendList( tempList )
