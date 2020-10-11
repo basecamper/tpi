@@ -90,7 +90,7 @@ class KeyStroker( Log ):
    def _genReleaseKeys( self ):
       return (NULL_CHAR*8).encode()
    
-   def _send( self, text : list ):
+   def _send( self, text : list, keymap ):
       
       sleepTime = float( 0 )
       
@@ -107,7 +107,7 @@ class KeyStroker( Log ):
       self.logStart()
       
       releaseKeys = self._genReleaseKeys()
-      newlineKey = kmap[ "\n" ]
+      newlineKey = keymap[ "\n" ]
       
       try:
          lastChar = None
@@ -130,21 +130,34 @@ class KeyStroker( Log ):
          self.logException( e )
       self.logEnd()
    
-   def _parseText( self, text : str, layout : str = KEYSETTING.de ):
+   def _parseText( self, text : str, keymap ):
       self.logStart( "parsing {c} characters".format( c=len(text) ) )
       li = []
-      kmap = self._layouts[ layout ]
       lastChar = None
       for c in text:
-         if c in kmap:
+         if c in keymap:
             if lastChar == c or lastChar == "\n":
                li.append( self._genReleaseKeys() )
-            li.append( kmap[ c ] )
+            li.append( keymap[ c ] )
             lastChar = c
       
       li.append( self._genReleaseKeys() )
       self.logEnd()
       return li
+   
+   def send( self, text : str ):
+      self.logStart()
+      if not self._sending:
+         self.log("sending stringLen: {t}".format(t=len(text)))
+         self._sending = True
+         cfg = ( GlobalRuntime.getRuntimeConfig( RUNTIME_CONFIG_KEY.keymap )
+                 if GlobalRuntime.hasRuntimeConfig( RUNTIME_CONFIG_KEY.keymap )
+                 else KEYSETTING.de )
+         keymap = self._layouts[ cfg ]
+         
+         self._send( self._parseText( text, keymap ), keymap )
+         self._sending = False
+      self.logEnd()
    
    def test( self ):
       self.logStart()
@@ -256,16 +269,4 @@ class KeyStroker( Log ):
       li = []
       
       self.send( "\tabcdefghijklmnopqrstuvwxyz\nABCDEFGHIJKLMNOPQRSTUVWXYZ\n1234567890ß´\n!\"§$%&/()=?`\nöäüÖÄÜ\n,.-#;:_'\n+*~<>|\n" )
-      self.logEnd()
-   
-   def send( self, text : str ):
-      self.logStart()
-      if not self._sending:
-         self.log("sending stringLen: {t}".format(t=len(text)))
-         self._sending = True
-         if GlobalRuntime.hasRuntimeConfig( RUNTIME_CONFIG_KEY.keymap ):
-            self._send( self._parseText( text, GlobalRuntime.getRuntimeConfig( RUNTIME_CONFIG_KEY.keymap ) ) )
-         else:
-            self._send( self._parseText( text ) )
-         self._sending = False
       self.logEnd()
